@@ -1,0 +1,66 @@
+version: '1'
+
+test:
+  abort_on_failure: false
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.3
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    echo 'TODO: Run unit tests'
+
+static-scan:
+  abort_on_failure: false
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.3
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    source /cicd-scripts/static_scan.sh
+
+containerize:
+  dind: true
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.3
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    source /cicd-scripts/build_setup.sh
+    
+    get_env api-key | docker login -u iamapikey --password-stdin "$ICR_REGISTRY_REGION.icr.io"
+    
+    echo "Checking registry namespace: ${ICR_REGISTRY_NAMESPACE}"
+    IBM_LOGIN_REGISTRY_REGION=$(get_env registry-region | awk -F: '{print $3}')
+    ibmcloud login --apikey $(get_env api-key) -r "$IBM_LOGIN_REGISTRY_REGION"
+    NS=$( ibmcloud cr namespaces | sed 's/ *$//' | grep -x "${ICR_REGISTRY_NAMESPACE}" ||: )
+  
+    if [ -z "${NS}" ]; then
+      echo "Registry namespace ${ICR_REGISTRY_NAMESPACE} not found!"
+    return 1
+    else
+      echo "Registry namespace ${ICR_REGISTRY_NAMESPACE} found."
+    fi
+    
+    docker build -t $IMAGE .
+    docker push $IMAGE
+    
+    save_artifact image "digest=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE | awk -F@ '{print $2}')"
+
+deploy:
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.3
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    echo 'TODO: Connect to CD'
+
+acceptance-test:
+  abort_on_failure: false
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.3
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    echo 'TODO: Run acceptance tests'
+
+release:
+  image: us.icr.io/cloudrock_dev/onepipeline-automation-image:v1.3.3
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    echo 'TODO: Release'
