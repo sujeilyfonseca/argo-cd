@@ -6,7 +6,7 @@ Forked from [argoproj/argo-cd](https://github.com/argoproj/argo-cd), commit [987
 
 The following sections detail the enhancements made to ArgoCD Extensions.
 
-## v2.3.0 (Fork)
+## v2.3.2 (Fork)
 
 ### Resource Customization ConfigMap
 
