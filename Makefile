@@ -562,7 +562,7 @@ list:
 # Build the docker image
 .PHONY: docker-build
 docker-build:
-	docker build -t ${IMG} .
+	DOCKER_BUILDKIT=1 docker build -t ${IMG} .
 
 # Push the docker image
 .PHONY: docker-push
