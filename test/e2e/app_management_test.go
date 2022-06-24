@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"path"
 	"reflect"
 	"regexp"
@@ -31,9 +30,10 @@ import (
 
 	"github.com/argoproj/argo-cd/v2/common"
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
-	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	. "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/test/e2e/fixture"
 	. "github.com/argoproj/argo-cd/v2/test/e2e/fixture"
+	accountFixture "github.com/argoproj/argo-cd/v2/test/e2e/fixture/account"
 	. "github.com/argoproj/argo-cd/v2/test/e2e/fixture/app"
 	projectFixture "github.com/argoproj/argo-cd/v2/test/e2e/fixture/project"
 	repoFixture "github.com/argoproj/argo-cd/v2/test/e2e/fixture/repos"
@@ -50,6 +50,176 @@ const (
 	globalWithNoNameSpace  = "global-with-no-namespace"
 	guestbookWithNamespace = "guestbook-with-namespace"
 )
+
+// This empty test is here only for clarity, to conform to logs rbac tests structure in account. This exact usecase is covered in the TestAppLogs test
+func TestGetLogsAllowNoSwitch(t *testing.T) {
+}
+
+// There is some code duplication in the below GetLogs tests, the reason for that is to allow getting rid of most of those tests easily in the next release,
+// when the temporary switch would die
+func TestGetLogsDenySwitchOn(t *testing.T) {
+	SkipOnEnv(t, "OPENSHIFT")
+
+	accountFixture.Given(t).
+		Name("test").
+		When().
+		Create().
+		Login().
+		SetPermissions([]fixture.ACL{
+			{
+				Resource: "applications",
+				Action:   "create",
+				Scope:    "*",
+			},
+			{
+				Resource: "applications",
+				Action:   "get",
+				Scope:    "*",
+			},
+			{
+				Resource: "applications",
+				Action:   "sync",
+				Scope:    "*",
+			},
+			{
+				Resource: "projects",
+				Action:   "get",
+				Scope:    "*",
+			},
+		}, "app-creator")
+
+	GivenWithSameState(t).
+		Path("guestbook-logs").
+		When().
+		CreateApp().
+		Sync().
+		SetParamInSettingConfigMap("server.rbac.log.enforce.enable", "true").
+		Then().
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		And(func(app *Application) {
+			_, err := RunCli("app", "logs", app.Name, "--kind", "Deployment", "--group", "", "--name", "guestbook-ui")
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "permission denied")
+		})
+}
+
+func TestGetLogsAllowSwitchOn(t *testing.T) {
+	SkipOnEnv(t, "OPENSHIFT")
+
+	accountFixture.Given(t).
+		Name("test").
+		When().
+		Create().
+		Login().
+		SetPermissions([]fixture.ACL{
+			{
+				Resource: "applications",
+				Action:   "create",
+				Scope:    "*",
+			},
+			{
+				Resource: "applications",
+				Action:   "get",
+				Scope:    "*",
+			},
+			{
+				Resource: "applications",
+				Action:   "sync",
+				Scope:    "*",
+			},
+			{
+				Resource: "projects",
+				Action:   "get",
+				Scope:    "*",
+			},
+			{
+				Resource: "logs",
+				Action:   "get",
+				Scope:    "*",
+			},
+		}, "app-creator")
+
+	GivenWithSameState(t).
+		Path("guestbook-logs").
+		When().
+		CreateApp().
+		Sync().
+		SetParamInSettingConfigMap("server.rbac.log.enforce.enable", "true").
+		Then().
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		And(func(app *Application) {
+			out, err := RunCli("app", "logs", app.Name, "--kind", "Deployment", "--group", "", "--name", "guestbook-ui")
+			assert.NoError(t, err)
+			assert.Contains(t, out, "Hi")
+		}).
+		And(func(app *Application) {
+			out, err := RunCli("app", "logs", app.Name, "--kind", "Pod")
+			assert.NoError(t, err)
+			assert.Contains(t, out, "Hi")
+		}).
+		And(func(app *Application) {
+			out, err := RunCli("app", "logs", app.Name, "--kind", "Service")
+			assert.NoError(t, err)
+			assert.NotContains(t, out, "Hi")
+		})
+
+}
+
+func TestGetLogsAllowSwitchOff(t *testing.T) {
+	SkipOnEnv(t, "OPENSHIFT")
+
+	accountFixture.Given(t).
+		Name("test").
+		When().
+		Create().
+		Login().
+		SetPermissions([]fixture.ACL{
+			{
+				Resource: "applications",
+				Action:   "create",
+				Scope:    "*",
+			},
+			{
+				Resource: "applications",
+				Action:   "get",
+				Scope:    "*",
+			},
+			{
+				Resource: "applications",
+				Action:   "sync",
+				Scope:    "*",
+			},
+			{
+				Resource: "projects",
+				Action:   "get",
+				Scope:    "*",
+			},
+		}, "app-creator")
+
+	Given(t).
+		Path("guestbook-logs").
+		When().
+		CreateApp().
+		Sync().
+		SetParamInSettingConfigMap("server.rbac.log.enforce.enable", "false").
+		Then().
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		And(func(app *Application) {
+			out, err := RunCli("app", "logs", app.Name, "--kind", "Deployment", "--group", "", "--name", "guestbook-ui")
+			assert.NoError(t, err)
+			assert.Contains(t, out, "Hi")
+		}).
+		And(func(app *Application) {
+			out, err := RunCli("app", "logs", app.Name, "--kind", "Pod")
+			assert.NoError(t, err)
+			assert.Contains(t, out, "Hi")
+		}).
+		And(func(app *Application) {
+			out, err := RunCli("app", "logs", app.Name, "--kind", "Service")
+			assert.NoError(t, err)
+			assert.NotContains(t, out, "Hi")
+		})
+}
 
 func TestSyncToUnsignedCommit(t *testing.T) {
 	SkipOnEnv(t, "GPG")
@@ -415,11 +585,11 @@ func TestManipulateApplicationResources(t *testing.T) {
 
 			_, err = client.DeleteResource(context.Background(), &applicationpkg.ApplicationResourceDeleteRequest{
 				Name:         &app.Name,
-				Group:        deployment.GroupVersionKind().Group,
-				Kind:         deployment.GroupVersionKind().Kind,
-				Version:      deployment.GroupVersionKind().Version,
-				Namespace:    deployment.GetNamespace(),
-				ResourceName: deployment.GetName(),
+				Group:        pointer.String(deployment.GroupVersionKind().Group),
+				Kind:         pointer.String(deployment.GroupVersionKind().Kind),
+				Version:      pointer.String(deployment.GroupVersionKind().Version),
+				Namespace:    pointer.String(deployment.GetNamespace()),
+				ResourceName: pointer.String(deployment.GetName()),
 			})
 			assert.NoError(t, err)
 		}).
@@ -464,14 +634,14 @@ func TestAppWithSecrets(t *testing.T) {
 		Expect(SyncStatusIs(SyncStatusCodeSynced)).
 		And(func(app *Application) {
 			res := FailOnErr(client.GetResource(context.Background(), &applicationpkg.ApplicationResourceRequest{
-				Namespace:    app.Spec.Destination.Namespace,
-				Kind:         kube.SecretKind,
-				Group:        "",
+				Namespace:    &app.Spec.Destination.Namespace,
+				Kind:         pointer.String(kube.SecretKind),
+				Group:        pointer.String(""),
 				Name:         &app.Name,
-				Version:      "v1",
-				ResourceName: "test-secret",
+				Version:      pointer.String("v1"),
+				ResourceName: pointer.String("test-secret"),
 			})).(*applicationpkg.ApplicationResourceResponse)
-			assetSecretDataHidden(t, res.Manifest)
+			assetSecretDataHidden(t, res.GetManifest())
 
 			manifests, err := client.GetManifests(context.Background(), &applicationpkg.ApplicationManifestQuery{Name: &app.Name})
 			errors.CheckError(err)
@@ -517,7 +687,7 @@ func TestAppWithSecrets(t *testing.T) {
 			app.Spec.IgnoreDifferences = []ResourceIgnoreDifferences{{
 				Kind: kube.SecretKind, JSONPointers: []string{"/data"},
 			}}
-			FailOnErr(client.UpdateSpec(context.Background(), &applicationpkg.ApplicationUpdateSpecRequest{Name: &app.Name, Spec: app.Spec}))
+			FailOnErr(client.UpdateSpec(context.Background(), &applicationpkg.ApplicationUpdateSpecRequest{Name: &app.Name, Spec: &app.Spec}))
 		}).
 		When().
 		Refresh(RefreshTypeNormal).
@@ -679,17 +849,6 @@ func TestConfigMap(t *testing.T) {
 	testEdgeCasesApplicationResources(t, "config-map", health.HealthStatusHealthy, "my-map  Synced                configmap/my-map created")
 }
 
-func TestFailedConversion(t *testing.T) {
-	if os.Getenv("ARGOCD_E2E_K3S") == "true" {
-		t.SkipNow()
-	}
-	defer func() {
-		FailOnErr(Run("", "kubectl", "delete", "apiservice", "v1beta1.metrics.k8s.io"))
-	}()
-
-	testEdgeCasesApplicationResources(t, "failed-conversion", health.HealthStatusProgressing)
-}
-
 func testEdgeCasesApplicationResources(t *testing.T, appPath string, statusCode health.HealthStatusCode, message ...string) {
 	expect := Given(t).
 		Path(appPath).
@@ -708,40 +867,6 @@ func testEdgeCasesApplicationResources(t *testing.T, appPath string, statusCode 
 			diffOutput, err := RunCli("app", "diff", app.Name, "--local", path.Join("testdata", appPath))
 			assert.Empty(t, diffOutput)
 			assert.NoError(t, err)
-		})
-}
-
-func TestKsonnetApp(t *testing.T) {
-	SkipOnEnv(t, "KSONNET")
-	Given(t).
-		Path("ksonnet").
-		Env("prod").
-		// Null out dest server to verify that destination is inferred from ksonnet app
-		Parameter("guestbook-ui=image=gcr.io/heptio-images/ks-guestbook-demo:0.1").
-		DestServer("").
-		When().
-		CreateApp().
-		Sync().
-		Then().
-		And(func(app *Application) {
-			closer, client, err := ArgoCDClientset.NewRepoClient()
-			assert.NoError(t, err)
-			defer io.Close(closer)
-
-			details, err := client.GetAppDetails(context.Background(), &repositorypkg.RepoAppDetailsQuery{
-				AppName:    app.Name,
-				AppProject: app.Spec.Project,
-				Source:     &app.Spec.Source,
-			})
-			assert.NoError(t, err)
-
-			serviceType := ""
-			for _, param := range details.Ksonnet.Parameters {
-				if param.Name == "type" && param.Component == "guestbook-ui" {
-					serviceType = param.Value
-				}
-			}
-			assert.Equal(t, serviceType, "LoadBalancer")
 		})
 }
 
@@ -768,22 +893,22 @@ func TestResourceAction(t *testing.T) {
 
 			actions, err := client.ListResourceActions(context.Background(), &applicationpkg.ApplicationResourceRequest{
 				Name:         &app.Name,
-				Group:        "apps",
-				Kind:         "Deployment",
-				Version:      "v1",
-				Namespace:    DeploymentNamespace(),
-				ResourceName: "guestbook-ui",
+				Group:        pointer.String("apps"),
+				Kind:         pointer.String("Deployment"),
+				Version:      pointer.String("v1"),
+				Namespace:    pointer.String(DeploymentNamespace()),
+				ResourceName: pointer.String("guestbook-ui"),
 			})
 			assert.NoError(t, err)
-			assert.Equal(t, []ResourceAction{{Name: "sample", Disabled: false}}, actions.Actions)
+			assert.Equal(t, []*ResourceAction{{Name: "sample", Disabled: false}}, actions.Actions)
 
 			_, err = client.RunResourceAction(context.Background(), &applicationpkg.ResourceActionRunRequest{Name: &app.Name,
-				Group:        "apps",
-				Kind:         "Deployment",
-				Version:      "v1",
-				Namespace:    DeploymentNamespace(),
-				ResourceName: "guestbook-ui",
-				Action:       "sample",
+				Group:        pointer.String("apps"),
+				Kind:         pointer.String("Deployment"),
+				Version:      pointer.String("v1"),
+				Namespace:    pointer.String(DeploymentNamespace()),
+				ResourceName: pointer.String("guestbook-ui"),
+				Action:       pointer.String("sample"),
 			})
 			assert.NoError(t, err)
 
@@ -928,7 +1053,14 @@ func assertResourceActions(t *testing.T, appName string, successful bool) {
 	require.NoError(t, err)
 
 	logs, err := cdClient.PodLogs(context.Background(), &applicationpkg.ApplicationPodLogsQuery{
-		Group: pointer.String("apps"), Kind: pointer.String("Deployment"), Name: &appName, Namespace: DeploymentNamespace(),
+		Group:        pointer.String("apps"),
+		Kind:         pointer.String("Deployment"),
+		Name:         &appName,
+		Namespace:    pointer.String(DeploymentNamespace()),
+		Container:    pointer.String(""),
+		SinceSeconds: pointer.Int64(0),
+		TailLines:    pointer.Int64(0),
+		Follow:       pointer.Bool(false),
 	})
 	require.NoError(t, err)
 	_, err = logs.Recv()
@@ -937,20 +1069,41 @@ func assertResourceActions(t *testing.T, appName string, successful bool) {
 	expectedError := fmt.Sprintf("Deployment apps guestbook-ui not found as part of application %s", appName)
 
 	_, err = cdClient.ListResourceEvents(context.Background(), &applicationpkg.ApplicationResourceEventsQuery{
-		Name: &appName, ResourceName: "guestbook-ui", ResourceNamespace: DeploymentNamespace(), ResourceUID: string(deploymentResource.UID)})
+		Name:              &appName,
+		ResourceName:      pointer.String("guestbook-ui"),
+		ResourceNamespace: pointer.String(DeploymentNamespace()),
+		ResourceUID:       pointer.String(string(deploymentResource.UID)),
+	})
 	assertError(err, fmt.Sprintf("%s not found as part of application %s", "guestbook-ui", appName))
 
 	_, err = cdClient.GetResource(context.Background(), &applicationpkg.ApplicationResourceRequest{
-		Name: &appName, ResourceName: "guestbook-ui", Namespace: DeploymentNamespace(), Version: "v1", Group: "apps", Kind: "Deployment"})
-	assertError(err, expectedError)
-
-	_, err = cdClient.DeleteResource(context.Background(), &applicationpkg.ApplicationResourceDeleteRequest{
-		Name: &appName, ResourceName: "guestbook-ui", Namespace: DeploymentNamespace(), Version: "v1", Group: "apps", Kind: "Deployment",
+		Name:         &appName,
+		ResourceName: pointer.String("guestbook-ui"),
+		Namespace:    pointer.String(DeploymentNamespace()),
+		Version:      pointer.String("v1"),
+		Group:        pointer.String("apps"),
+		Kind:         pointer.String("Deployment"),
 	})
 	assertError(err, expectedError)
 
 	_, err = cdClient.RunResourceAction(context.Background(), &applicationpkg.ResourceActionRunRequest{
-		Name: &appName, ResourceName: "guestbook-ui", Namespace: DeploymentNamespace(), Version: "v1", Group: "apps", Kind: "Deployment", Action: "restart",
+		Name:         &appName,
+		ResourceName: pointer.String("guestbook-ui"),
+		Namespace:    pointer.String(DeploymentNamespace()),
+		Version:      pointer.String("v1"),
+		Group:        pointer.String("apps"),
+		Kind:         pointer.String("Deployment"),
+		Action:       pointer.String("restart"),
+	})
+	assertError(err, expectedError)
+
+	_, err = cdClient.DeleteResource(context.Background(), &applicationpkg.ApplicationResourceDeleteRequest{
+		Name:         &appName,
+		ResourceName: pointer.String("guestbook-ui"),
+		Namespace:    pointer.String(DeploymentNamespace()),
+		Version:      pointer.String("v1"),
+		Group:        pointer.String("apps"),
+		Kind:         pointer.String("Deployment"),
 	})
 	assertError(err, expectedError)
 }
@@ -1119,11 +1272,6 @@ func TestSyncOptionPruneFalse(t *testing.T) {
 // make sure that if we have an invalid manifest, we can add it if we disable validation, we get a server error rather than a client error
 func TestSyncOptionValidateFalse(t *testing.T) {
 
-	// k3s does not validate at all, so this test does not work
-	if os.Getenv("ARGOCD_E2E_K3S") == "true" {
-		t.SkipNow()
-	}
-
 	Given(t).
 		Path("crd-validation").
 		When().
@@ -1141,7 +1289,7 @@ func TestSyncOptionValidateFalse(t *testing.T) {
 		Sync().
 		Then().
 		// server error
-		Expect(Error("Error from server", ""))
+		Expect(Error("cannot be handled as a Deployment", ""))
 }
 
 // make sure that, if we have a resource that needs pruning, but we're ignoring it, the app is in-sync
