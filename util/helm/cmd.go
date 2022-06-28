@@ -176,7 +176,11 @@ func (c *Cmd) RepoAdd(name string, url string, opts Creds, passCredentials bool)
 		if err != nil {
 			return "", err
 		}
-		defer certFile.Close()
+		defer func() {
+			if err := certFile.Close(); err != nil {
+				// TODO: Log this error in future
+			}
+		}()
 		args = append(args, "--cert-file", certFile.Name())
 	}
 
@@ -189,7 +193,11 @@ func (c *Cmd) RepoAdd(name string, url string, opts Creds, passCredentials bool)
 		if err != nil {
 			return "", err
 		}
-		defer keyFile.Close()
+		defer func() {
+			if err := keyFile.Close(); err != nil {
+				// TODO: Log this error in future
+			}
+		}()
 		args = append(args, "--key-file", keyFile.Name())
 	}
 
@@ -207,12 +215,16 @@ func writeToTmp(data []byte) (string, io.Closer, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	err = ioutil.WriteFile(file.Name(), data, 0644)
+	err = ioutil.WriteFile(file.Name(), data, 0600)
 	if err != nil {
 		_ = os.RemoveAll(file.Name())
 		return "", nil, err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 	return file.Name(), io.NewCloser(func() error {
 		return os.RemoveAll(file.Name())
 	}), nil

@@ -126,7 +126,7 @@ func (k *ksonnetApp) Destination(environment string) (*v1alpha1.ApplicationDesti
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadFile(p)
+	data, err := ioutil.ReadFile(filepath.Clean(p))
 	if err != nil {
 		return nil, err
 	}

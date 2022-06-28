@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"path/filepath"
 	"time"
 
 	"github.com/ghodss/yaml"
@@ -65,7 +66,7 @@ func portIsOpen(addr string) bool {
 
 // Read the contents of a file and returns it as string. Panics on error.
 func MustLoadFileToString(path string) string {
-	o, err := ioutil.ReadFile(path)
+	o, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		panic(err.Error())
 	}

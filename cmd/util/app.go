@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -582,7 +583,7 @@ func readAppsFromURI(fileURL string, apps *[]*argoappv1.Application) error {
 	readFilePayload := func() ([]byte, error) {
 		parsedURL, err := url.ParseRequestURI(fileURL)
 		if err != nil || !(parsedURL.Scheme == "http" || parsedURL.Scheme == "https") {
-			return ioutil.ReadFile(fileURL)
+			return ioutil.ReadFile(filepath.Clean(fileURL))
 		}
 		return config.ReadRemoteFile(fileURL)
 	}

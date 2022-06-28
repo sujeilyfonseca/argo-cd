@@ -61,6 +61,8 @@ const (
 
 const (
 	EnvAdminUsername = "ARGOCD_E2E_ADMIN_USERNAME"
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	EnvAdminPassword = "ARGOCD_E2E_ADMIN_PASSWORD"
 )
 
@@ -178,7 +180,7 @@ func init() {
 	if rf == "" {
 		return
 	}
-	f, err := os.Open(rf)
+	f, err := os.Open(filepath.Clean(rf))
 	if err != nil {
 		if goerrors.Is(err, os.ErrNotExist) {
 			return
@@ -186,7 +188,11 @@ func init() {
 			panic(fmt.Sprintf("Could not read record file %s: %v", rf, err))
 		}
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			errors.CheckError(err)
+		}
+	}()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		testsRun[scanner.Text()] = true
@@ -571,11 +577,11 @@ func EnsureCleanState(t *testing.T) {
 	FailOnErr(Run("", "mkdir", "-p", TmpDir+"/gpg"))
 	FailOnErr(Run("", "chmod", "0700", TmpDir+"/gpg"))
 	prevGnuPGHome := os.Getenv("GNUPGHOME")
-	os.Setenv("GNUPGHOME", TmpDir+"/gpg")
+	_ = os.Setenv("GNUPGHOME", TmpDir+"/gpg")
 	// nolint:errcheck
-	Run("", "pkill", "-9", "gpg-agent")
+	_, _ = Run("", "pkill", "-9", "gpg-agent")
 	FailOnErr(Run("", "gpg", "--import", "../fixture/gpg/signingkey.asc"))
-	os.Setenv("GNUPGHOME", prevGnuPGHome)
+	_ = os.Setenv("GNUPGHOME", prevGnuPGHome)
 
 	// recreate GPG directories
 	if IsLocal() {
@@ -624,7 +630,7 @@ func Patch(path string, jsonPatch string) {
 	log.WithFields(log.Fields{"path": path, "jsonPatch": jsonPatch}).Info("patching")
 
 	filename := filepath.Join(repoDirectory(), path)
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := ioutil.ReadFile(filepath.Clean(filename))
 	CheckError(err)
 
 	patch, err := jsonpatch.DecodePatch([]byte(jsonPatch))
@@ -648,7 +654,7 @@ func Patch(path string, jsonPatch string) {
 		CheckError(err)
 	}
 
-	CheckError(ioutil.WriteFile(filename, bytes, 0644))
+	CheckError(ioutil.WriteFile(filename, bytes, 0600))
 	FailOnErr(Run(repoDirectory(), "git", "diff"))
 	FailOnErr(Run(repoDirectory(), "git", "commit", "-am", "patch"))
 	if IsRemote() {
@@ -672,7 +678,7 @@ func Delete(path string) {
 func WriteFile(path, contents string) {
 	log.WithFields(log.Fields{"path": path}).Info("adding")
 
-	CheckError(ioutil.WriteFile(filepath.Join(repoDirectory(), path), []byte(contents), 0644))
+	CheckError(ioutil.WriteFile(filepath.Join(repoDirectory(), path), []byte(contents), 0600))
 }
 
 func AddFile(path, contents string) {
@@ -692,11 +698,11 @@ func AddSignedFile(path, contents string) {
 	WriteFile(path, contents)
 
 	prevGnuPGHome := os.Getenv("GNUPGHOME")
-	os.Setenv("GNUPGHOME", TmpDir+"/gpg")
+	_ = os.Setenv("GNUPGHOME", TmpDir+"/gpg")
 	FailOnErr(Run(repoDirectory(), "git", "diff"))
 	FailOnErr(Run(repoDirectory(), "git", "add", "."))
 	FailOnErr(Run(repoDirectory(), "git", "-c", fmt.Sprintf("user.signingkey=%s", GpgGoodKeyID), "commit", "-S", "-am", "add file"))
-	os.Setenv("GNUPGHOME", prevGnuPGHome)
+	_ = os.Setenv("GNUPGHOME", prevGnuPGHome)
 	if IsRemote() {
 		FailOnErr(Run(repoDirectory(), "git", "push", "-f", "origin", "master"))
 	}
@@ -705,14 +711,18 @@ func AddSignedFile(path, contents string) {
 // create the resource by creating using "kubectl apply", with bonus templating
 func Declarative(filename string, values interface{}) (string, error) {
 
-	bytes, err := ioutil.ReadFile(path.Join("testdata", filename))
+	bytes, err := ioutil.ReadFile(filepath.Clean(path.Join("testdata", filename)))
 	CheckError(err)
 
 	tmpFile, err := ioutil.TempFile("", "")
 	CheckError(err)
 	_, err = tmpFile.WriteString(Tmpl(string(bytes), values))
 	CheckError(err)
-	defer tmpFile.Close()
+	defer func() {
+		if err := tmpFile.Close(); err != nil {
+			errors.CheckError(err)
+		}
+	}()
 	return Run("", "kubectl", "-n", TestNamespace(), "apply", "-f", tmpFile.Name())
 }
 
@@ -821,11 +831,15 @@ func RecordTestRun(t *testing.T) {
 		return
 	}
 	log.Infof("Registering test execution at %s", rf)
-	f, err := os.OpenFile(rf, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filepath.Clean(rf), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		t.Fatalf("could not open record file %s: %v", rf, err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			errors.CheckError(err)
+		}
+	}()
 	if _, err := f.WriteString(fmt.Sprintf("%s\n", t.Name())); err != nil {
 		t.Fatalf("could not write to %s: %v", rf, err)
 	}

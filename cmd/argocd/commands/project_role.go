@@ -306,6 +306,8 @@ func NewProjectRoleListTokensCommand(clientOpts *argocdclient.ClientOptions) *co
 			_, err = fmt.Fprintf(writer, "ID\tISSUED AT\tEXPIRES AT\n")
 			errors.CheckError(err)
 
+			/* False positive, these are not credentials */
+			/* #nosec G101 */
 			tokenRowFormat := "%s\t%v\t%v\n"
 			for _, token := range role.JWTTokens {
 				if useUnixTime {

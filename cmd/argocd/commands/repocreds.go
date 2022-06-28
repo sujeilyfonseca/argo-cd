@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"text/tabwriter"
 
 	log "github.com/sirupsen/logrus"
@@ -48,6 +49,8 @@ func NewRepoCredsAddCommand(clientOpts *argocdclient.ClientOptions) *cobra.Comma
 		githubAppPrivateKeyPath string
 	)
 
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	// For better readability and easier formatting
 	var repocredsAddExamples = `  # Add credentials with user/pass authentication to use for all repositories under https://git.example.com/repos
   argocd repocreds add https://git.example.com/repos/ --username git --password secret
@@ -81,7 +84,7 @@ func NewRepoCredsAddCommand(clientOpts *argocdclient.ClientOptions) *cobra.Comma
 			// Specifying ssh-private-key-path is only valid for SSH repositories
 			if sshPrivateKeyPath != "" {
 				if ok, _ := git.IsSSHURL(repo.URL); ok {
-					keyData, err := ioutil.ReadFile(sshPrivateKeyPath)
+					keyData, err := ioutil.ReadFile(filepath.Clean(sshPrivateKeyPath))
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -102,9 +105,9 @@ func NewRepoCredsAddCommand(clientOpts *argocdclient.ClientOptions) *cobra.Comma
 			// Specifying tls-client-cert-path is only valid for HTTPS repositories
 			if tlsClientCertPath != "" {
 				if git.IsHTTPSURL(repo.URL) {
-					tlsCertData, err := ioutil.ReadFile(tlsClientCertPath)
+					tlsCertData, err := ioutil.ReadFile(filepath.Clean(tlsClientCertPath))
 					errors.CheckError(err)
-					tlsCertKey, err := ioutil.ReadFile(tlsClientCertKeyPath)
+					tlsCertKey, err := ioutil.ReadFile(filepath.Clean(tlsClientCertKeyPath))
 					errors.CheckError(err)
 					repo.TLSClientCertData = string(tlsCertData)
 					repo.TLSClientCertKey = string(tlsCertKey)
@@ -117,7 +120,7 @@ func NewRepoCredsAddCommand(clientOpts *argocdclient.ClientOptions) *cobra.Comma
 			// Specifying github-app-private-key-path is only valid for HTTPS repositories
 			if githubAppPrivateKeyPath != "" {
 				if git.IsHTTPSURL(repo.URL) {
-					githubAppPrivateKey, err := ioutil.ReadFile(githubAppPrivateKeyPath)
+					githubAppPrivateKey, err := ioutil.ReadFile(filepath.Clean(githubAppPrivateKeyPath))
 					errors.CheckError(err)
 					repo.GithubAppPrivateKey = string(githubAppPrivateKey)
 				} else {

@@ -64,7 +64,7 @@ func NewConnection(address string, timeoutSeconds int, tlsConfig *TLSConfigurati
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize), grpc.MaxCallSendMsgSize(MaxGRPCMessageSize)),
 	}
 
-	tlsC := &tls.Config{}
+	tlsC := &tls.Config{MinVersion: tls.VersionTLS12}
 	if !tlsConfig.DisableTLS {
 		if !tlsConfig.StrictValidation {
 			tlsC.InsecureSkipVerify = true

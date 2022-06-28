@@ -1010,8 +1010,9 @@ func NewApplicationDeleteCommand(clientOpts *argocdclient.ClientOptions) *cobra.
 				noPrompt = true
 			}
 			for _, appName := range args {
+				nameofapp := appName
 				appDeleteReq := applicationpkg.ApplicationDeleteRequest{
-					Name: &appName,
+					Name: &nameofapp,
 				}
 				if c.Flag("cascade").Changed {
 					appDeleteReq.Cascade = &cascade
@@ -1024,12 +1025,12 @@ func NewApplicationDeleteCommand(clientOpts *argocdclient.ClientOptions) *cobra.
 					var lowercaseAnswer string
 					if numOfApps == 1 {
 						fmt.Println("Are you sure you want to delete '" + appName + "' and all its resources? [y/n]")
-						fmt.Scan(&confirmAnswer)
+						_, _ = fmt.Scan(&confirmAnswer)
 						lowercaseAnswer = strings.ToLower(confirmAnswer)
 					} else {
 						if !isConfirmAll {
 							fmt.Println("Are you sure you want to delete '" + appName + "' and all its resources? [y/n/A] where 'A' is to delete all specified apps and their resources without prompting")
-							fmt.Scan(&confirmAnswer)
+							_, _ = fmt.Scan(&confirmAnswer)
 							lowercaseAnswer = strings.ToLower(confirmAnswer)
 							if lowercaseAnswer == "a" || lowercaseAnswer == "all" {
 								lowercaseAnswer = "y"
@@ -1354,11 +1355,12 @@ func NewApplicationSyncCommand(clientOpts *argocdclient.ClientOptions) *cobra.Co
 
 			for _, appName := range appNames {
 
+				nameofapp := appName
 				if len(selectedLabels) > 0 {
 					ctx := context.Background()
 
 					q := applicationpkg.ApplicationManifestQuery{
-						Name:     &appName,
+						Name:     &nameofapp,
 						Revision: revision,
 					}
 
@@ -1390,7 +1392,7 @@ func NewApplicationSyncCommand(clientOpts *argocdclient.ClientOptions) *cobra.Co
 
 				var localObjsStrings []string
 				if local != "" {
-					app, err := appIf.Get(context.Background(), &applicationpkg.ApplicationQuery{Name: &appName})
+					app, err := appIf.Get(context.Background(), &applicationpkg.ApplicationQuery{Name: &nameofapp})
 					errors.CheckError(err)
 					if app.Spec.SyncPolicy != nil && app.Spec.SyncPolicy.Automated != nil && !dryRun {
 						log.Fatal("Cannot use local sync when Automatic Sync Policy is enabled except with --dry-run")
@@ -1426,7 +1428,7 @@ func NewApplicationSyncCommand(clientOpts *argocdclient.ClientOptions) *cobra.Co
 				}
 
 				syncReq := applicationpkg.ApplicationSyncRequest{
-					Name:        &appName,
+					Name:        &nameofapp,
 					DryRun:      dryRun,
 					Revision:    revision,
 					Resources:   selectedResources,

@@ -16,6 +16,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -349,7 +350,7 @@ func LoadX509CertPool(paths ...string) (*x509.CertPool, error) {
 			// ...but everything else is considered an error
 			return nil, fmt.Errorf("could not load TLS certificate: %v", err)
 		} else {
-			f, err := ioutil.ReadFile(path)
+			f, err := ioutil.ReadFile(filepath.Clean(path))
 			if err != nil {
 				return nil, fmt.Errorf("failure to load TLS certificates from %s: %v", path, err)
 			}
@@ -414,6 +415,6 @@ func CreateServerTLSConfig(tlsCertPath, tlsKeyPath string, hosts []string) (*tls
 		cert = &c
 	}
 
-	return &tls.Config{Certificates: []tls.Certificate{*cert}}, nil
+	return &tls.Config{Certificates: []tls.Certificate{*cert}, MinVersion: tls.VersionTLS12}, nil
 
 }

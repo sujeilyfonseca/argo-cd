@@ -124,7 +124,7 @@ func createTempDir() (string, error) {
 		return "", err
 	}
 	tempDir := path.Join(os.TempDir(), newUUID.String())
-	if err := os.Mkdir(tempDir, 0755); err != nil {
+	if err := os.Mkdir(tempDir, 0750); err != nil {
 		return "", err
 	}
 	return tempDir, nil
@@ -328,6 +328,8 @@ func (c *nativeHelmChart) loadRepoIndex() ([]byte, error) {
 }
 
 func newTLSConfig(creds Creds) (*tls.Config, error) {
+	/* This is an option that can be passed in creds, so user handles it */
+	/* #nosec G402 */
 	tlsConfig := &tls.Config{InsecureSkipVerify: creds.InsecureSkipVerify}
 
 	if creds.CAPath != "" {

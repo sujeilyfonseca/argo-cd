@@ -302,7 +302,7 @@ func saveToFile(err error, outputFormat string, result reconcileResults, outputP
 		return fmt.Errorf("format %s is not supported", outputFormat)
 	}
 
-	return ioutil.WriteFile(outputPath, data, 0644)
+	return ioutil.WriteFile(outputPath, data, 0600)
 }
 
 func getReconcileResults(appClientset appclientset.Interface, namespace string, selector string) ([]appReconcileResult, error) {
@@ -401,6 +401,8 @@ func reconcileApplications(
 			return nil, err
 		}
 
+		/* This should not affect the app object as this is just comparing state */
+		/* #nosec G601 */
 		res := appStateManager.CompareAppState(&app, proj, app.Spec.Source.TargetRevision, app.Spec.Source, false, false, nil)
 		items = append(items, appReconcileResult{
 			Name:       app.Name,

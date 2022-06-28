@@ -609,6 +609,8 @@ func printProjectTable(projects []v1alpha1.AppProject) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintf(w, "NAME\tDESCRIPTION\tDESTINATIONS\tSOURCES\tCLUSTER-RESOURCE-WHITELIST\tNAMESPACE-RESOURCE-BLACKLIST\tSIGNATURE-KEYS\tORPHANED-RESOURCES\n")
 	for _, p := range projects {
+		/* This should not affect the app object as this is not modified or saved */
+		/* #nosec G601 */
 		printProjectLine(w, &p)
 	}
 	_ = w.Flush()

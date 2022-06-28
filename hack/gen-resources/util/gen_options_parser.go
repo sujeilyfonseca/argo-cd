@@ -2,6 +2,7 @@ package util
 
 import (
 	"io/ioutil"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 )
@@ -46,7 +47,7 @@ type GenerateOpts struct {
 }
 
 func Parse(opts *GenerateOpts, file string) error {
-	fp, err := ioutil.ReadFile(file)
+	fp, err := ioutil.ReadFile(filepath.Clean(file))
 	if err != nil {
 		return err
 	}

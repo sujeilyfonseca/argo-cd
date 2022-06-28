@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
@@ -253,7 +254,7 @@ func getPolicyFromFile(policyFile string) (string, string, error) {
 		defaultRole string
 	)
 
-	upol, err := ioutil.ReadFile(policyFile)
+	upol, err := ioutil.ReadFile(filepath.Clean(policyFile))
 	if err != nil {
 		log.Fatalf("error opening policy file: %v", err)
 		return "", "", err

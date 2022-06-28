@@ -161,10 +161,14 @@ func writeKeyToFile(keyData string) (string, error) {
 
 	err = ioutil.WriteFile(f.Name(), []byte(keyData), 0600)
 	if err != nil {
-		os.Remove(f.Name())
+		_ = os.Remove(f.Name())
 		return "", err
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 	return f.Name(), nil
 }
 
@@ -180,11 +184,15 @@ func removeKeyRing(path string) error {
 			return err
 		}
 	}
-	rd, err := os.Open(path)
+	rd, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return err
 	}
-	defer rd.Close()
+	defer func() {
+		if err := rd.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 	dns, err := rd.Readdirnames(-1)
 	if err != nil {
 		return err
@@ -244,7 +252,7 @@ func InitializeGnuPG() error {
 		}
 	}
 
-	err = ioutil.WriteFile(filepath.Join(gnuPgHome, canaryMarkerFilename), []byte("canary"), 0644)
+	err = ioutil.WriteFile(filepath.Join(gnuPgHome, canaryMarkerFilename), []byte("canary"), 0600)
 	if err != nil {
 		return fmt.Errorf("could not create canary: %v", err)
 	}
@@ -261,7 +269,11 @@ func InitializeGnuPG() error {
 		return err
 	}
 
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 
 	cmd := exec.Command("gpg", "--no-permission-warning", "--logger-fd", "1", "--batch", "--gen-key", f.Name())
 	cmd.Env = getGPGEnviron()
@@ -284,7 +296,11 @@ func ImportPGPKeysFromString(keyData string) ([]*appsv1.GnuPGPublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 	return ImportPGPKeys(f.Name())
 }
 
@@ -352,7 +368,10 @@ func ValidatePGPKeys(keyFile string) (map[string]*appsv1.GnuPGPublicKey, error) 
 	// Remember original GNUPGHOME, then set it to temp directory
 	oldGPGHome := os.Getenv(common.EnvGnuPGHome)
 	defer os.Setenv(common.EnvGnuPGHome, oldGPGHome)
-	os.Setenv(common.EnvGnuPGHome, tempHome)
+	err = os.Setenv(common.EnvGnuPGHome, tempHome)
+	if err != nil {
+		return nil, err
+	}
 
 	// Import they keys to our temporary keyring...
 	_, err = ImportPGPKeys(keyFile)
@@ -404,7 +423,11 @@ func SetPGPTrustLevel(pgpKeys []*appsv1.GnuPGPublicKey, trustLevel string) error
 		}
 	}
 
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 
 	// Load ownertrust from the file we have constructed and instruct gpg to update the trustdb
 	cmd := exec.Command("gpg", "--no-permission-warning", "--import-ownertrust", f.Name())
