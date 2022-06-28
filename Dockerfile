@@ -31,6 +31,24 @@ COPY hack/installers installers
 RUN ./install.sh helm-linux && \
     INSTALL_PATH=/usr/local/bin ./install.sh kustomize
 
+
+####################################################################################################
+# Build helm
+####################################################################################################
+FROM golang:1.17 as helm-builder
+WORKDIR /
+RUN git clone -b v3.9.0 https://github.com/helm/helm && \
+    cd helm && \
+    make install
+
+####################################################################################################
+# Build kustomize
+####################################################################################################
+FROM golang:1.17 as kustomize-builder
+WORKDIR /
+RUN GOBIN=$(pwd)/ GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v4
+
+
 ####################################################################################################
 # Argo CD Base - used as the base for both the release and dev argocd images
 ####################################################################################################
@@ -47,15 +65,19 @@ RUN groupadd -g 999 argocd && \
     chmod g=u /home/argocd && \
     apt-get update && \
     apt-get dist-upgrade -y && \
-    apt-get install -y \
-    git git-lfs tini gpg tzdata && \
+    apt-get install -y git tini gpg tzdata wget && \
+    # START - Install git-lfs
+    wget https://github.com/git-lfs/git-lfs/releases/download/v3.2.0/git-lfs-linux-amd64-v3.2.0.tar.gz && \
+    tar -xvf git-lfs-linux-amd64-v3.2.0.tar.gz && \
+    cp ./git-lfs-3.2.0/git-lfs /usr/bin/git-lfs && \
+    # END - Install git-lfs
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
-COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
-COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
+COPY --from=helm-builder /helm/bin/helm /usr/local/bin/helm
+COPY --from=kustomize-builder /kustomize /usr/local/bin/kustomize
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 # keep uid_entrypoint.sh for backward compatibility
 RUN ln -s /usr/local/bin/entrypoint.sh /usr/local/bin/uid_entrypoint.sh
