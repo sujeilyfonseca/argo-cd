@@ -1662,6 +1662,8 @@ func getSelectedPods(treeNodes []appv1.ResourceNode, q *application.ApplicationP
 	isTheOneMap := make(map[string]bool)
 	for _, treeNode := range treeNodes {
 		if treeNode.Kind == kube.PodKind && treeNode.Group == "" && treeNode.UID != "" {
+			/* This should not affect the app object as this is not modified or saved */
+			/* #nosec G601 */
 			if isTheSelectedOne(&treeNode, q, treeNodes, isTheOneMap) {
 				pods = append(pods, treeNode)
 			}
@@ -1698,6 +1700,9 @@ func isTheSelectedOne(currentNode *appv1.ResourceNode, q *application.Applicatio
 				resourceNode.Name == parentResource.Name &&
 				resourceNode.Group == parentResource.Group &&
 				resourceNode.Kind == parentResource.Kind {
+
+				/* This should not affect the object as it does not make any changes to the object */
+				/* #nosec G601 */
 				if isTheSelectedOne(&resourceNode, q, resourceNodes, isTheOneMap) {
 					isTheOneMap[currentNode.UID] = true
 					return true
@@ -1856,6 +1861,8 @@ func (s *Server) Rollback(ctx context.Context, rollbackReq *application.Applicat
 	var deploymentInfo *appv1.RevisionHistory
 	for _, info := range a.Status.History {
 		if info.ID == rollbackReq.GetId() {
+			/* This should not affect the object as it does not make any changes to the object */
+			/* #nosec G601 */
 			deploymentInfo = &info
 			break
 		}

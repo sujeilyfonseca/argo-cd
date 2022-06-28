@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"

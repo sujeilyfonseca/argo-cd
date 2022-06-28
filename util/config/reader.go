@@ -77,6 +77,8 @@ func UnmarshalRemoteFile(url string, obj interface{}) error {
 // The caller is responsible for checking error return values.
 func ReadRemoteFile(url string) ([]byte, error) {
 	var data []byte
+	/* The caller is responsible to check the validity */
+	/* #nosec G107 */
 	resp, err := http.Get(url)
 	if err == nil {
 		defer func() {

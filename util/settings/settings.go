@@ -356,14 +356,22 @@ const (
 	// statusBadgeRootUrlKey holds the key for the root badge URL override
 	statusBadgeRootUrlKey = "statusbadge.url"
 	// settingsWebhookGitHubSecret is the key for the GitHub shared webhook secret
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	settingsWebhookGitHubSecretKey = "webhook.github.secret"
 	// settingsWebhookGitLabSecret is the key for the GitLab shared webhook secret
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	settingsWebhookGitLabSecretKey = "webhook.gitlab.secret"
 	// settingsWebhookBitbucketUUID is the key for Bitbucket webhook UUID
 	settingsWebhookBitbucketUUIDKey = "webhook.bitbucket.uuid"
 	// settingsWebhookBitbucketServerSecret is the key for BitbucketServer webhook secret
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	settingsWebhookBitbucketServerSecretKey = "webhook.bitbucketserver.secret"
 	// settingsWebhookGogsSecret is the key for Gogs webhook secret
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	settingsWebhookGogsSecretKey = "webhook.gogs.secret"
 	// settingsApplicationInstanceLabelKey is the key to configure injected app instance label key
 	settingsApplicationInstanceLabelKey = "application.instanceLabelKey"
@@ -404,12 +412,18 @@ const (
 	// globalProjectsKey designates the key for global project settings
 	globalProjectsKey = "globalProjects"
 	// initialPasswordSecretName is the name of the secret that will hold the initial admin password
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	initialPasswordSecretName = "argocd-initial-admin-secret"
 	// initialPasswordSecretField is the name of the field in initialPasswordSecretName to store the password
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	initialPasswordSecretField = "password"
 	// initialPasswordLength defines the length of the generated initial password
 	initialPasswordLength = 16
 	// externalServerTLSSecretName defines the name of the external secret holding the server's TLS certificate
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	externalServerTLSSecretName = "argocd-server-tls"
 	// partOfArgoCDSelector holds label selector that should be applied to config maps and secrets used to manage Argo CD
 	partOfArgoCDSelector = "app.kubernetes.io/part-of=argocd"

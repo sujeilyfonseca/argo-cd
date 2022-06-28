@@ -164,7 +164,10 @@ func StartLocalServer(ctx context.Context, clientOpts *apiclient.ClientOptions, 
 	runtime.ErrorHandlers = runtime.ErrorHandlers[1:]
 	cli.SetLogLevel(log.ErrorLevel.String())
 	log.SetLevel(log.ErrorLevel)
-	os.Setenv(v1alpha1.EnvVarFakeInClusterConfig, "true")
+	err := os.Setenv(v1alpha1.EnvVarFakeInClusterConfig, "true")
+	if err != nil {
+		return err
+	}
 	if address == nil {
 		address = pointer.String("localhost")
 	}

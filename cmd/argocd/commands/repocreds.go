@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"text/tabwriter"
 
 	log "github.com/sirupsen/logrus"
@@ -47,6 +48,8 @@ func NewRepoCredsAddCommand(clientOpts *argocdclient.ClientOptions) *cobra.Comma
 		githubAppPrivateKeyPath string
 	)
 
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	// For better readability and easier formatting
 	var repocredsAddExamples = `  # Add credentials with user/pass authentication to use for all repositories under https://git.example.com/repos
   argocd repocreds add https://git.example.com/repos/ --username git --password secret

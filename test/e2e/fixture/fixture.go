@@ -61,6 +61,8 @@ const (
 
 const (
 	EnvAdminUsername = "ARGOCD_E2E_ADMIN_USERNAME"
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	EnvAdminPassword = "ARGOCD_E2E_ADMIN_PASSWORD"
 )
 
@@ -741,7 +743,7 @@ func AddSignedFile(path, contents string) {
 	FailOnErr(Run(repoDirectory(), "git", "diff"))
 	FailOnErr(Run(repoDirectory(), "git", "add", "."))
 	FailOnErr(Run(repoDirectory(), "git", "-c", fmt.Sprintf("user.signingkey=%s", GpgGoodKeyID), "commit", "-S", "-am", "add file"))
-	os.Setenv("GNUPGHOME", prevGnuPGHome)
+	_ = os.Setenv("GNUPGHOME", prevGnuPGHome)
 	if IsRemote() {
 		FailOnErr(Run(repoDirectory(), "git", "push", "-f", "origin", "master"))
 	}

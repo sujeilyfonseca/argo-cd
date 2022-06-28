@@ -235,7 +235,11 @@ func (a *ArgoCDWebhookHandler) HandleEvent(payload interface{}) {
 			continue
 		}
 		for _, app := range apps.Items {
+			/* This should not affect the object as it does not make any changes to the object */
+			/* #nosec G601 */
 			if appRevisionHasChanged(&app, revision, touchedHead) && appUsesURL(&app, webURL, repoRegexp) {
+				/* This should not affect the object as it does not make any changes to the object */
+				/* #nosec G601 */
 				if appFilesHaveChanged(&app, changedFiles) {
 					_, err = argo.RefreshApp(appIf, app.ObjectMeta.Name, v1alpha1.RefreshTypeNormal)
 					if err != nil {
@@ -243,6 +247,8 @@ func (a *ArgoCDWebhookHandler) HandleEvent(payload interface{}) {
 						continue
 					}
 				} else if change.shaBefore != "" && change.shaAfter != "" {
+					/* This should not affect the object as it does not make any changes to the object */
+					/* #nosec G601 */
 					if err := a.storePreviouslyCachedManifests(&app, change, trackingMethod, appInstanceLabelKey); err != nil {
 						log.Warnf("Failed to store cached manifests of previous revision for app '%s': %v", app.Name, err)
 					}

@@ -315,6 +315,8 @@ func (c *nativeHelmChart) loadRepoIndex() ([]byte, error) {
 }
 
 func newTLSConfig(creds Creds) (*tls.Config, error) {
+	/* This is an option that can be passed in creds, so user handles it */
+	/* #nosec G402 */
 	tlsConfig := &tls.Config{InsecureSkipVerify: creds.InsecureSkipVerify}
 
 	if creds.CAPath != "" {
