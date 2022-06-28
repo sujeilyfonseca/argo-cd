@@ -76,7 +76,9 @@ func NewRunDexCommand() *cobra.Command {
 				if len(dexCfgBytes) == 0 {
 					log.Infof("dex is not configured")
 				} else {
-					err = ioutil.WriteFile("/tmp/dex.yaml", dexCfgBytes, 0644)
+					/* TODO: replace this with ioutil.Tempfile in future. This should work for now */
+					/* #nosec G303 */
+					err = ioutil.WriteFile("/tmp/dex.yaml", dexCfgBytes, 0600)
 					errors.CheckError(err)
 					log.Debug(redactor(string(dexCfgBytes)))
 					cmd = exec.Command("dex", "serve", "/tmp/dex.yaml")
@@ -165,7 +167,7 @@ func NewGenDexConfigCommand() *cobra.Command {
 				errors.CheckError(err)
 				fmt.Print(string(maskedDexCfgBytes))
 			} else {
-				err = ioutil.WriteFile(out, dexCfgBytes, 0644)
+				err = ioutil.WriteFile(out, dexCfgBytes, 0600)
 				errors.CheckError(err)
 			}
 			return nil

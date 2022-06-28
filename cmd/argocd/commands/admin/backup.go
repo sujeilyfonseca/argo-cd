@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/argoproj/gitops-engine/pkg/utils/kube"
 	"github.com/ghodss/yaml"
@@ -138,7 +139,7 @@ func NewImportCommand() *cobra.Command {
 			if in := args[0]; in == "-" {
 				input, err = ioutil.ReadAll(os.Stdin)
 			} else {
-				input, err = ioutil.ReadFile(in)
+				input, err = ioutil.ReadFile(filepath.Clean(in))
 			}
 			errors.CheckError(err)
 			var dryRunMsg string

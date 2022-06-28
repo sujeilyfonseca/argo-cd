@@ -53,17 +53,25 @@ func copySingleFile(src string, dest string, mode os.FileInfo) error {
 		return fmt.Errorf("unable to copy directories: %s", src)
 	}
 
-	srcFile, err := os.Open(src)
+	srcFile, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return err
 	}
-	defer srcFile.Close()
+	defer func() {
+		if err := srcFile.Close(); err != nil {
+			// Log error not needed
+		}
+	}()
 
 	destFile, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() {
+		if err := destFile.Close(); err != nil {
+			// Log error not needed
+		}
+	}()
 
 	err = os.Chmod(destFile.Name(), mode.Mode())
 	if err != nil {

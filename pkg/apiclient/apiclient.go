@@ -60,6 +60,8 @@ const (
 	// EnvArgoCDServer is the environment variable to look for an Argo CD server address
 	EnvArgoCDServer = "ARGOCD_SERVER"
 	// EnvArgoCDAuthToken is the environment variable to look for an Argo CD auth token
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	EnvArgoCDAuthToken = "ARGOCD_AUTH_TOKEN"
 	// EnvArgoCDgRPCMaxSizeMB is the environment variable to look for a max gRPC message size
 	EnvArgoCDgRPCMaxSizeMB = "ARGOCD_GRPC_MAX_SIZE_MB"

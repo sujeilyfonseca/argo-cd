@@ -35,6 +35,8 @@ import (
 
 const (
 	// JWTTokenSubFormat format of the JWT token subject that Argo CD vends out.
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	JWTTokenSubFormat = "proj:%s:%s"
 )
 
@@ -466,6 +468,8 @@ func (s *Server) NormalizeProjs() error {
 	for _, proj := range projList.Items {
 		for i := 0; i < 3; i++ {
 			if proj.NormalizeJWTTokens() {
+				/* This should not affect the object as it does not make any changes to the object */
+				/* #nosec G601 */
 				_, err := s.appclientset.ArgoprojV1alpha1().AppProjects(s.ns).Update(context.Background(), &proj, metav1.UpdateOptions{})
 				if err == nil {
 					log.Info(fmt.Sprintf("Successfully normalized project %s.", proj.Name))

@@ -419,6 +419,7 @@ func (a *ArgoCDServer) Run(ctx context.Context, listeners *Listeners) {
 		tlsl := tcpm.Match(cmux.Any())
 		tlsConfig := tls.Config{
 			Certificates: []tls.Certificate{*a.settings.Certificate},
+			MinVersion:   tls.VersionTLS12,
 		}
 		if a.TLSConfigCustomizer != nil {
 			a.TLSConfigCustomizer(&tlsConfig)

@@ -20,7 +20,7 @@ func main() {
 
 func generateNotificationsDocs() {
 	_ = os.RemoveAll("./docs/operator-manual/notifications/services")
-	_ = os.MkdirAll("./docs/operator-manual/notifications/services", 0755)
+	_ = os.MkdirAll("./docs/operator-manual/notifications/services", 0750)
 	files, err := docs.CopyServicesDocs("./docs/operator-manual/notifications/services")
 	if err != nil {
 		log.Fatal(err)
@@ -62,7 +62,7 @@ func updateMkDocsNav(parent string, child string, subchild string, files []strin
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile("mkdocs.yml", newmkdocs, 0644)
+	return ioutil.WriteFile("mkdocs.yml", newmkdocs, 0600)
 }
 
 func trimPrefixes(files []string, prefix string) {

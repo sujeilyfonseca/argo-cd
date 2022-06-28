@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
@@ -111,7 +112,7 @@ func NewGPGAddCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {
 			if fromFile == "" {
 				errors.CheckError(fmt.Errorf("--from is mandatory"))
 			}
-			keyData, err := ioutil.ReadFile(fromFile)
+			keyData, err := ioutil.ReadFile(filepath.Clean(fromFile))
 			if err != nil {
 				errors.CheckError(err)
 			}

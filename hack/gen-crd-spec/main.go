@@ -132,7 +132,7 @@ func writeCRDintoFile(crd *extensionsobj.CustomResourceDefinition, path string) 
 	yamlBytes, err := yaml.JSONToYAML(jsonBytes)
 	checkErr(err)
 
-	err = ioutil.WriteFile(path, yamlBytes, 0644)
+	err = ioutil.WriteFile(path, yamlBytes, 0600)
 	checkErr(err)
 }
 

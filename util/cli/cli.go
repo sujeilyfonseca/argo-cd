@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -154,9 +155,9 @@ func ReadAndConfirmPassword(username string) (string, error) {
 func SetLogFormat(logFormat string) {
 	switch strings.ToLower(logFormat) {
 	case utillog.JsonFormat:
-		os.Setenv(common.EnvLogFormat, utillog.JsonFormat)
+		_ = os.Setenv(common.EnvLogFormat, utillog.JsonFormat)
 	case utillog.TextFormat, "":
-		os.Setenv(common.EnvLogFormat, utillog.TextFormat)
+		_ = os.Setenv(common.EnvLogFormat, utillog.TextFormat)
 	default:
 		log.Fatalf("Unknown log format '%s'", logFormat)
 	}
@@ -168,7 +169,7 @@ func SetLogFormat(logFormat string) {
 func SetLogLevel(logLevel string) {
 	level, err := log.ParseLevel(text.FirstNonEmpty(logLevel, log.InfoLevel.String()))
 	errors.CheckError(err)
-	os.Setenv(common.EnvLogLevel, level.String())
+	_ = os.Setenv(common.EnvLogLevel, level.String())
 	log.SetLevel(level)
 }
 
@@ -252,7 +253,7 @@ func InteractiveEdit(filePattern string, data []byte, save func(input []byte) er
 		err := (term.TTY{In: os.Stdin, TryDev: true}).Safe(cmd.Run)
 		errors.CheckError(err)
 
-		updated, err := ioutil.ReadFile(tempFile)
+		updated, err := ioutil.ReadFile(filepath.Clean(tempFile))
 		errors.CheckError(err)
 		if string(updated) == "" || string(updated) == string(data) {
 			errors.CheckError(fmt.Errorf("Edit cancelled, no valid changes were saved."))
@@ -284,7 +285,7 @@ func PrintDiff(name string, live *unstructured.Unstructured, target *unstructure
 			return err
 		}
 	}
-	err = ioutil.WriteFile(targetFile, targetData, 0644)
+	err = ioutil.WriteFile(targetFile, targetData, 0600)
 	if err != nil {
 		return err
 	}
@@ -296,7 +297,7 @@ func PrintDiff(name string, live *unstructured.Unstructured, target *unstructure
 			return err
 		}
 	}
-	err = ioutil.WriteFile(liveFile, liveData, 0644)
+	err = ioutil.WriteFile(liveFile, liveData, 0600)
 	if err != nil {
 		return err
 	}

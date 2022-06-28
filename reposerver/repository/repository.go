@@ -140,7 +140,7 @@ func (s *Service) Init() error {
 	}
 	if err == nil {
 		// give itself read permissions to list previously written directories
-		err = os.Chmod(s.rootDir, 0700)
+		err = os.Chmod(s.rootDir, 0600)
 	}
 	var files []fs.FileInfo
 	if err == nil {
@@ -694,7 +694,7 @@ func runHelmBuild(appPath string, h helm.Helm) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(markerFile, []byte("marker"), 0644)
+	return ioutil.WriteFile(markerFile, []byte("marker"), 0600)
 }
 
 func helmTemplate(appPath string, repoRoot string, env *v1alpha1.Env, q *apiclient.ManifestRequest, isLocal bool) ([]*unstructured.Unstructured, error) {
@@ -753,7 +753,7 @@ func helmTemplate(appPath string, repoRoot string, env *v1alpha1.Env, q *apiclie
 			}
 			p := path.Join(os.TempDir(), rand.String())
 			defer func() { _ = os.RemoveAll(p) }()
-			err = ioutil.WriteFile(p, []byte(appHelm.Values), 0644)
+			err = ioutil.WriteFile(p, []byte(appHelm.Values), 0600)
 			if err != nil {
 				return nil, err
 			}
@@ -1025,7 +1025,7 @@ func mergeSourceParameters(source *v1alpha1.ApplicationSource, path, appName str
 		if err != nil {
 			return fmt.Errorf("%s: %v", filename, err)
 		}
-		patch, err := ioutil.ReadFile(filename)
+		patch, err := ioutil.ReadFile(filepath.Clean(filename))
 		if err != nil {
 			return fmt.Errorf("%s: %v", filename, err)
 		}
@@ -1649,7 +1649,7 @@ func loadFileIntoIfExists(path pathutil.ResolvedFilePath, destination *string) e
 	info, err := os.Stat(stringPath)
 
 	if err == nil && !info.IsDir() {
-		bytes, err := ioutil.ReadFile(stringPath)
+		bytes, err := ioutil.ReadFile(filepath.Clean(stringPath))
 		if err != nil {
 			return err
 		}
@@ -1840,7 +1840,7 @@ func (s *Service) newHelmClientResolveRevision(repo *v1alpha1.Repository, revisi
 // a function that can be used to remove all permissions.
 func directoryPermissionInitializer(rootPath string) goio.Closer {
 	if _, err := os.Stat(rootPath); err == nil {
-		if err := os.Chmod(rootPath, 0700); err != nil {
+		if err := os.Chmod(rootPath, 0600); err != nil {
 			log.Warnf("Failed to restore read/write/execute permissions on %s: %v", rootPath, err)
 		} else {
 			log.Debugf("Successfully restored read/write/execute permissions on %s", rootPath)

@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 
 	"github.com/ghodss/yaml"
 )
@@ -52,7 +53,7 @@ func MarshalLocalYAMLFile(path string, obj interface{}) error {
 // UnmarshalLocalFile retrieves JSON or YAML from a file on disk.
 // The caller is responsible for checking error return values.
 func UnmarshalLocalFile(path string, obj interface{}) error {
-	data, err := ioutil.ReadFile(path)
+	data, err := ioutil.ReadFile(filepath.Clean(path))
 	if err == nil {
 		err = unmarshalObject(data, obj)
 	}
@@ -77,6 +78,8 @@ func UnmarshalRemoteFile(url string, obj interface{}) error {
 // The caller is responsible for checking error return values.
 func ReadRemoteFile(url string) ([]byte, error) {
 	var data []byte
+	/* The caller is responsible to check the validity */
+	/* #nosec G107 */
 	resp, err := http.Get(url)
 	if err == nil {
 		defer func() {

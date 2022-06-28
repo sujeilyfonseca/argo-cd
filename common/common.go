@@ -92,6 +92,8 @@ const (
 	GithubAppCredsExpirationDuration = time.Minute * 60
 
 	// PasswordPatten is the default password patten
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	PasswordPatten = `^.{8,32}$`
 )
 
@@ -125,12 +127,16 @@ const (
 	// LabelKeyLegacyApplicationName is the legacy label (v0.10 and below) and is superseded by 'app.kubernetes.io/instance'
 	LabelKeyLegacyApplicationName = "applications.argoproj.io/app-name"
 	// LabelKeySecretType contains the type of argocd secret (currently: 'cluster', 'repository', 'repo-config' or 'repo-creds')
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	LabelKeySecretType = "argocd.argoproj.io/secret-type"
 	// LabelValueSecretTypeCluster indicates a secret type of cluster
 	LabelValueSecretTypeCluster = "cluster"
 	// LabelValueSecretTypeRepository indicates a secret type of repository
 	LabelValueSecretTypeRepository = "repository"
 	// LabelValueSecretTypeRepoCreds indicates a secret type of repository credentials
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	LabelValueSecretTypeRepoCreds = "repo-creds"
 
 	// The Argo CD application name is used as the instance name
@@ -192,6 +198,8 @@ const (
 	// EnvEnableGRPCTimeHistogramEnv enables gRPC metrics collection
 	EnvEnableGRPCTimeHistogramEnv = "ARGOCD_ENABLE_GRPC_TIME_HISTOGRAM"
 	// EnvGithubAppCredsExpirationDuration controls the caching of Github app credentials. This value is in minutes (default: 60)
+	/* False positive, these are not credentials */
+	/* #nosec G101 */
 	EnvGithubAppCredsExpirationDuration = "ARGOCD_GITHUB_APP_CREDS_EXPIRATION_DURATION"
 	// EnvHelmIndexCacheDuration controls how the helm repository index file is cached for (default: 0)
 	EnvHelmIndexCacheDuration = "ARGOCD_HELM_INDEX_CACHE_DURATION"

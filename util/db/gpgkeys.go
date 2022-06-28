@@ -25,7 +25,11 @@ func validatePGPKey(keyData string) (*appsv1.GnuPGPublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 
 	parsed, err := gpg.ValidatePGPKeys(f.Name())
 	if err != nil {

@@ -128,7 +128,7 @@ func TestTLS(address string) (*TLSTestResult, error) {
 	if err == nil {
 		_ = conn.Close()
 		testResult.TLS = true
-		creds := credentials.NewTLS(&tls.Config{})
+		creds := credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
 		conn, err := BlockingDial(context.Background(), "tcp", address, creds)
 		if err == nil {
 			_ = conn.Close()
