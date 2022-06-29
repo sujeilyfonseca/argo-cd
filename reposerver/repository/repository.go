@@ -1794,7 +1794,7 @@ func (s *Service) newHelmClientResolveRevision(repo *v1alpha1.Repository, revisi
 // a function that can be used to remove all permissions.
 func directoryPermissionInitializer(rootPath string) goio.Closer {
 	if _, err := os.Stat(rootPath); err == nil {
-		if err := os.Chmod(rootPath, 0600); err != nil {
+		if err := os.Chmod(rootPath, 0700); err != nil {
 			log.Warnf("Failed to restore read/write/execute permissions on %s: %v", rootPath, err)
 		} else {
 			log.Debugf("Successfully restored read/write/execute permissions on %s", rootPath)
