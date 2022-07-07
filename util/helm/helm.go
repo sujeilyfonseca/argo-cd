@@ -154,7 +154,7 @@ func (h *helm) GetParameters(valuesFiles []pathutil.ResolvedFilePath, appPath, r
 			if _, err := os.Stat(file); os.IsNotExist(err) {
 				continue
 			}
-			fileValues, err = ioutil.ReadFile(filepath.Clean(file))
+			fileValues, err = ioutil.ReadFile(file)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to read value file %s: %s", file, err)

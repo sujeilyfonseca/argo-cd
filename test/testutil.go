@@ -6,7 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"path/filepath"
+	"os"
+	"testing"
 	"time"
 
 	"github.com/ghodss/yaml"
@@ -80,4 +81,15 @@ func YamlToUnstructured(yamlStr string) *unstructured.Unstructured {
 		panic(err)
 	}
 	return &unstructured.Unstructured{Object: obj}
+}
+
+// GetTestDir will return the full directory path of the
+// calling test file.
+func GetTestDir(t *testing.T) string {
+	t.Helper()
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cwd
 }
