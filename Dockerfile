@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=docker.io/library/ubuntu:22.04
+ARG BASE_IMAGE=docker.io/library/ubuntu:22.10
 ####################################################################################################
 # Builder image
 # Initial stage which pulls prepares build dependencies and CLI tooling we need for our final image
@@ -8,7 +8,7 @@ FROM docker.io/library/golang:1.18 AS builder
 
 RUN echo 'deb http://deb.debian.org/debian buster-backports main' >> /etc/apt/sources.list
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recommends -y \
     openssh-server \
     nginx \
     unzip \
@@ -64,6 +64,7 @@ RUN groupadd -g 999 argocd && \
     chown argocd:0 /home/argocd && \
     chmod g=u /home/argocd && \
     apt-get update && \
+    apt-get upgrade -y && \
     apt-get dist-upgrade -y && \
     apt-get install -y git tini gpg tzdata wget && \
     # START - Install git-lfs
