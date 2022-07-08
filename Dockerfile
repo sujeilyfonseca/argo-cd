@@ -108,7 +108,8 @@ FROM --platform=$BUILDPLATFORM docker.io/library/node:12.18.4 AS argocd-ui
 WORKDIR /src
 COPY ["ui/package.json", "ui/yarn.lock", "./"]
 
-RUN yarn install --network-timeout 200000 && \
+RUN yarn --update-checksums && \
+    yarn install --network-timeout 200000 && \
     yarn cache clean
 
 COPY ["ui/", "."]
