@@ -10144,8 +10144,11 @@ func (this *AppProjectStatus) String() string {
 	for k := range this.JWTTokensByRole {
 		keysForJWTTokensByRole = append(keysForJWTTokensByRole, k)
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForJWTTokensByRole)
-	mapStringForJWTTokensByRole := "map[string]JWTTokens{"
+	
+	/* False positive: These are not hardcoded credentials. */
+	/* #nosec G101 */
+	github_com_gogo_protobuf_sortkeys.Strings(keysForJWTTokensByRole) // #nosec G101
+	mapStringForJWTTokensByRole := "map[string]JWTTokens{" // #nosec G101
 	for _, k := range keysForJWTTokensByRole {
 		mapStringForJWTTokensByRole += fmt.Sprintf("%v: %v,", k, this.JWTTokensByRole[k])
 	}
@@ -10933,6 +10936,9 @@ func (this *ProjectRole) String() string {
 	if this == nil {
 		return "nil"
 	}
+
+	/* False positive: These are not hardcoded credentials. */
+	/* #nosec G101 */
 	repeatedStringForJWTTokens := "[]JWTToken{"
 	for _, f := range this.JWTTokens {
 		repeatedStringForJWTTokens += strings.Replace(strings.Replace(f.String(), "JWTToken", "JWTToken", 1), `&`, ``, 1) + ","
