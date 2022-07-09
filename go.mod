@@ -252,6 +252,7 @@ replace (
 	github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.12.2
+	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.9.1 // indirect
 	golang.org/x/crypto/ssh => golang.org/x/crypto/ssh v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/net => golang.org/x/net v0.0.0-20220708220712-1185a9018129
 	gopkg.in/square/go-jose.v2 => gopkg.in/square/go-jose.v2 v2.6.0 // indirect
