@@ -19,6 +19,9 @@ import (
 )
 
 const (
+	/* False positive: ArgoCDSecretTypeLabel and ArgoCDSecretTypeCluster are parameters to define the secret type label and secret type cluster, 
+	which are not hardcoded credentials or secured parameters. */
+	/* #nosec G101 */
 	ArgoCDSecretTypeLabel   = "argocd.argoproj.io/secret-type"
 	ArgoCDSecretTypeCluster = "cluster"
 )

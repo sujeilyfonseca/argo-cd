@@ -219,8 +219,11 @@ const (
 	EnvPluginSockFilePath = "ARGOCD_PLUGINSOCKFILEPATH"
 	// EnvCMPChunkSize defines the chunk size in bytes used when sending files to the cmp server
 	EnvCMPChunkSize = "ARGOCD_CMP_CHUNK_SIZE"
-	// EnvCMPWorkDir defines the full path of the work directory used by the CMP server
-	EnvCMPWorkDir = "ARGOCD_CMP_WORKDIR"
+	
+	/* False positive: The referenced variable (EnvCMPWorkDir) defines the full path of the working directory used by the cmp-server, 
+	which is not hardcoded credentials. */
+	/* #nosec G101 */
+	EnvCMPWorkDir = "ARGOCD_CMP_WORKDIR" // EnvCMPWorkDir defines the full path of the work directory used by the CMP server
 )
 
 // Config Management Plugin related constants
