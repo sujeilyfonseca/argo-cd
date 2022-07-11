@@ -663,7 +663,7 @@ func repoExists(repo string, repos []*v1alpha1.Repository) bool {
 }
 
 func isConcurrencyAllowed(appPath string) bool {
-	if _, err := os.Stat(path.Join(appPath, allowConcurrencyFile)); err == nil {
+	if _, err := os.Stat(filepath.Clean(path.Join(appPath, allowConcurrencyFile))); err == nil {
 		return true
 	}
 	return false
@@ -682,7 +682,7 @@ func runHelmBuild(appPath string, h helm.Helm) error {
 	// the `helm dependency build` is potentially time consuming 1~2 seconds
 	// marker file is used to check if command already run to avoid running it again unnecessary
 	// file is removed when repository re-initialized (e.g. when another commit is processed)
-	markerFile := path.Join(appPath, helmDepUpMarkerFile)
+	markerFile := filepath.Clean(path.Join(appPath, helmDepUpMarkerFile))
 	_, err := os.Stat(markerFile)
 	if err == nil {
 		return nil
@@ -1002,10 +1002,10 @@ func newEnv(q *apiclient.ManifestRequest, revision string) *v1alpha1.Env {
 // be read and merged. If appName is not the empty string, and a file named
 // .argocd-source-<appName>.yaml exists, it will also be read and merged.
 func mergeSourceParameters(source *v1alpha1.ApplicationSource, path, appName string) error {
-	repoFilePath := filepath.Join(path, repoSourceFile)
+	repoFilePath := filepath.Clean(filepath.Join(path, repoSourceFile))
 	overrides := []string{repoFilePath}
 	if appName != "" {
-		overrides = append(overrides, filepath.Join(path, fmt.Sprintf(appSourceFile, appName)))
+		overrides = append(overrides, filepath.Clean(filepath.Join(path, fmt.Sprintf(appSourceFile, appName))))
 	}
 
 	var merged = *source.DeepCopy()
@@ -1614,7 +1614,7 @@ func populateHelmAppDetails(res *apiclient.RepoAppDetailsResponse, appPath strin
 			return err
 		}
 	} else {
-		log.Warnf("Values file %s is not allowed: %v", filepath.Join(appPath, "values.yaml"), err)
+		log.Warnf("Values file %s is not allowed: %v", filepath.Clean(filepath.Join(appPath, "values.yaml")), err)
 	}
 	var resolvedSelectedValueFiles []pathutil.ResolvedFilePath
 	// drop not allowed values files

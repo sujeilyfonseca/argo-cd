@@ -176,7 +176,7 @@ func writeKeyToFile(keyData string) (string, error) {
 // This must only be called on container startup, when no gpg-agent is running
 // yet, otherwise key generation will fail.
 func removeKeyRing(path string) error {
-	_, err := os.Stat(filepath.Join(path, canaryMarkerFilename))
+	_, err := os.Stat(filepath.Clean(filepath.Join(path, canaryMarkerFilename)))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("refusing to remove directory %s: it's not initialized by Argo CD", path)
@@ -201,7 +201,7 @@ func removeKeyRing(path string) error {
 		if p == "." || p == ".." {
 			continue
 		}
-		err := os.RemoveAll(filepath.Join(path, p))
+		err := os.RemoveAll(filepath.Clean(filepath.Join(path, p)))
 		if err != nil {
 			return err
 		}
@@ -252,7 +252,7 @@ func InitializeGnuPG() error {
 		}
 	}
 
-	err = ioutil.WriteFile(filepath.Join(gnuPgHome, canaryMarkerFilename), []byte("canary"), 0600)
+	err = ioutil.WriteFile(filepath.Clean(filepath.Join(gnuPgHome, canaryMarkerFilename)), []byte("canary"), 0600)
 	if err != nil {
 		return fmt.Errorf("could not create canary: %v", err)
 	}
@@ -724,12 +724,12 @@ func SyncKeyRingFromDirectory(basePath string) ([]string, []string, error) {
 	// First, add all keys that are found in the configuration but are not yet in the keyring
 	for key := range configured {
 		if _, ok := installed[key]; !ok {
-			addedKey, err := ImportPGPKeys(path.Join(basePath, key))
+			addedKey, err := ImportPGPKeys(filepath.Clean(path.Join(basePath, key)))
 			if err != nil {
 				return nil, nil, err
 			}
 			if len(addedKey) != 1 {
-				return nil, nil, fmt.Errorf("Invalid key found in %s", path.Join(basePath, key))
+				return nil, nil, fmt.Errorf("Invalid key found in %s", filepath.Clean(path.Join(basePath, key)))
 			}
 			importedKey, err := GetInstalledPGPKeys([]string{addedKey[0].KeyID})
 			if err != nil {

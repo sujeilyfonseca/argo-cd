@@ -313,7 +313,7 @@ func GetCertificateForConnect(serverName string) ([]string, error) {
 	if !strings.HasSuffix(dataPath, "/") {
 		dataPath += "/"
 	}
-	certPath, err := filepath.Abs(filepath.Join(dataPath, ServerNameWithoutPort(serverName)))
+	certPath, err := filepath.Abs(filepath.Clean(filepath.Join(dataPath, ServerNameWithoutPort(serverName))))
 	if err != nil {
 		return nil, err
 	}

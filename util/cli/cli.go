@@ -277,7 +277,7 @@ func PrintDiff(name string, live *unstructured.Unstructured, target *unstructure
 	if err != nil {
 		return err
 	}
-	targetFile := path.Join(tempDir, name)
+	targetFile := filepath.Clean(path.Join(tempDir, name))
 	targetData := []byte("")
 	if target != nil {
 		targetData, err = yaml.Marshal(target)
@@ -289,7 +289,7 @@ func PrintDiff(name string, live *unstructured.Unstructured, target *unstructure
 	if err != nil {
 		return err
 	}
-	liveFile := path.Join(tempDir, fmt.Sprintf("%s-live.yaml", name))
+	liveFile := filepath.Clean(path.Join(tempDir, fmt.Sprintf("%s-live.yaml", name)))
 	liveData := []byte("")
 	if live != nil {
 		liveData, err = yaml.Marshal(live)

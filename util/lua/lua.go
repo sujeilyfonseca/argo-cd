@@ -334,7 +334,7 @@ func GetConfigMapKey(gvk schema.GroupVersionKind) string {
 }
 
 func (vm VM) getPredefinedLuaScripts(objKey string, scriptFile string) (string, error) {
-	data, err := resource_customizations.Embedded.ReadFile(filepath.Join(objKey, scriptFile))
+	data, err := resource_customizations.Embedded.ReadFile(filepath.Clean(filepath.Join(objKey, scriptFile)))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", nil

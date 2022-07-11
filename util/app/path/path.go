@@ -11,7 +11,7 @@ func Path(root, path string) (string, error) {
 	if filepath.IsAbs(path) {
 		return "", fmt.Errorf("%s: app path is absolute", path)
 	}
-	appPath := filepath.Join(root, path)
+	appPath := filepath.Clean(filepath.Join(root, path))
 	if !strings.HasPrefix(appPath, filepath.Clean(root)) {
 		return "", fmt.Errorf("%s: app path outside root", path)
 	}

@@ -231,15 +231,15 @@ func Name() string {
 }
 
 func repoDirectory() string {
-	return path.Join(TmpDir, repoDir)
+	return filepath.Clean(path.Join(TmpDir, repoDir))
 }
 
 func submoduleDirectory() string {
-	return path.Join(TmpDir, submoduleDir)
+	return filepath.Clean(path.Join(TmpDir, submoduleDir))
 }
 
 func submoduleParentDirectory() string {
-	return path.Join(TmpDir, submoduleParentDir)
+	return filepath.Clean(path.Join(TmpDir, submoduleParentDir))
 }
 
 const (
@@ -636,7 +636,7 @@ func Patch(path string, jsonPatch string) {
 
 	log.WithFields(log.Fields{"path": path, "jsonPatch": jsonPatch}).Info("patching")
 
-	filename := filepath.Join(repoDirectory(), path)
+	filename := filepath.Clean(filepath.Join(repoDirectory(), path))
 	bytes, err := ioutil.ReadFile(filepath.Clean(filename))
 	CheckError(err)
 
@@ -673,7 +673,7 @@ func Delete(path string) {
 
 	log.WithFields(log.Fields{"path": path}).Info("deleting")
 
-	CheckError(os.Remove(filepath.Join(repoDirectory(), path)))
+	CheckError(os.Remove(filepath.Clean(filepath.Join(repoDirectory(), path))))
 
 	FailOnErr(Run(repoDirectory(), "git", "diff"))
 	FailOnErr(Run(repoDirectory(), "git", "commit", "-am", "delete"))
@@ -685,7 +685,7 @@ func Delete(path string) {
 func WriteFile(path, contents string) {
 	log.WithFields(log.Fields{"path": path}).Info("adding")
 
-	CheckError(ioutil.WriteFile(filepath.Join(repoDirectory(), path), []byte(contents), 0600))
+	CheckError(ioutil.WriteFile(filepath.Clean(filepath.Join(repoDirectory(), path)), []byte(contents), 0600))
 }
 
 func AddFile(path, contents string) {

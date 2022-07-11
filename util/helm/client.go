@@ -192,7 +192,7 @@ func (c *nativeHelmChart) ExtractChart(chart string, version string, passCredent
 		if len(infos) != 1 {
 			return "", nil, fmt.Errorf("expected 1 file, found %v", len(infos))
 		}
-		err = os.Rename(filepath.Join(tempDest, infos[0].Name()), cachedChartPath)
+		err = os.Rename(filepath.Clean(filepath.Join(tempDest, infos[0].Name())), cachedChartPath)
 		if err != nil {
 			return "", nil, err
 		}
@@ -205,7 +205,7 @@ func (c *nativeHelmChart) ExtractChart(chart string, version string, passCredent
 		_ = os.RemoveAll(tempDir)
 		return "", nil, err
 	}
-	return path.Join(tempDir, normalizeChartName(chart)), io.NewCloser(func() error {
+	return filepath.Clean(path.Join(tempDir, normalizeChartName(chart))), io.NewCloser(func() error {
 		return os.RemoveAll(tempDir)
 	}), nil
 }
@@ -379,7 +379,7 @@ func getIndexURL(rawURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	repoURL.Path = path.Join(repoURL.Path, indexFile)
-	repoURL.RawPath = path.Join(repoURL.RawPath, indexFile)
+	repoURL.Path = filepath.Clean(path.Join(repoURL.Path, indexFile))
+	repoURL.RawPath = filepath.Clean(path.Join(repoURL.RawPath, indexFile))
 	return repoURL.String(), nil
 }

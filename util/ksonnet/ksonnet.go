@@ -93,7 +93,7 @@ func NewKsonnetApp(path string) (KsonnetApp, error) {
 
 func (k *ksonnetApp) appYamlPath() (string, error) {
 	const appYamlName = "app.yaml"
-	p := filepath.Join(k.Root(), appYamlName)
+	p := filepath.Clean(filepath.Join(k.Root(), appYamlName))
 	if _, err := os.Stat(p); err != nil {
 		return "", err
 	}

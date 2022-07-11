@@ -142,7 +142,7 @@ func (h *helm) GetParameters(valuesFiles []pathutil.ResolvedFilePath, appPath, r
 		}
 		values = append(values, out)
 	} else {
-		log.Warnf("Values file %s is not allowed: %v", filepath.Join(appPath, "values.yaml"), err)
+		log.Warnf("Values file %s is not allowed: %v", filepath.Clean(filepath.Join(appPath, "values.yaml")), err)
 	}
 	for i := range valuesFiles {
 		file := string(valuesFiles[i])
