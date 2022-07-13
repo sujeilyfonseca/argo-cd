@@ -90,10 +90,10 @@ require (
 	k8s.io/klog/v2 v2.30.0
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65
 	k8s.io/kubectl v0.23.1
-	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
+	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	layeh.com/gopher-json v0.0.0-20190114024228-97fed8db8427
 	sigs.k8s.io/controller-runtime v0.11.0
-	sigs.k8s.io/structured-merge-diff/v4 v4.2.0
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -215,7 +215,7 @@ require (
 	k8s.io/component-helpers v0.23.1 // indirect
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect
 	k8s.io/kube-aggregator v0.23.1 // indirect
-	k8s.io/kubernetes v1.23.1 // indirect
+	k8s.io/kubernetes v1.23.8 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
 	sigs.k8s.io/kustomize/api v0.10.1 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.13.0 // indirect
@@ -256,6 +256,7 @@ replace (
 	golang.org/x/crypto/ssh => golang.org/x/crypto/ssh v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/net => golang.org/x/net v0.0.0-20220708220712-1185a9018129
 	gopkg.in/square/go-jose.v2 => gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	k8s.io/kubernetes => k8s.io/kubernetes v1.23.8
 )
 
 replace (
