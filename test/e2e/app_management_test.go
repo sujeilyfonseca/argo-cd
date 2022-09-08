@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -38,6 +39,7 @@ import (
 	projectFixture "github.com/argoproj/argo-cd/v2/test/e2e/fixture/project"
 	repoFixture "github.com/argoproj/argo-cd/v2/test/e2e/fixture/repos"
 	"github.com/argoproj/argo-cd/v2/test/e2e/testdata"
+	"github.com/argoproj/argo-cd/v2/util/argo"
 	. "github.com/argoproj/argo-cd/v2/util/argo"
 	. "github.com/argoproj/argo-cd/v2/util/errors"
 	"github.com/argoproj/argo-cd/v2/util/io"
@@ -947,7 +949,7 @@ func TestLocalManifestSync(t *testing.T) {
 		And(func(app *Application) {
 			res, _ := RunCli("app", "manifests", app.Name)
 			assert.Contains(t, res, "containerPort: 80")
-			assert.Contains(t, res, "image: gcr.io/heptio-images/ks-guestbook-demo:0.2")
+			assert.Contains(t, res, "image: quay.io/argoprojlabs/argocd-e2e-container:0.2")
 		}).
 		Given().
 		LocalPath(guestbookPathLocal).
@@ -958,7 +960,7 @@ func TestLocalManifestSync(t *testing.T) {
 		And(func(app *Application) {
 			res, _ := RunCli("app", "manifests", app.Name)
 			assert.Contains(t, res, "containerPort: 81")
-			assert.Contains(t, res, "image: gcr.io/heptio-images/ks-guestbook-demo:0.3")
+			assert.Contains(t, res, "image: quay.io/argoprojlabs/argocd-e2e-container:0.3")
 		}).
 		Given().
 		LocalPath("").
@@ -969,7 +971,7 @@ func TestLocalManifestSync(t *testing.T) {
 		And(func(app *Application) {
 			res, _ := RunCli("app", "manifests", app.Name)
 			assert.Contains(t, res, "containerPort: 80")
-			assert.Contains(t, res, "image: gcr.io/heptio-images/ks-guestbook-demo:0.2")
+			assert.Contains(t, res, "image: quay.io/argoprojlabs/argocd-e2e-container:0.2")
 		})
 }
 
@@ -1190,7 +1192,8 @@ func TestPermissionWithScopedRepo(t *testing.T) {
 		Name(projName).
 		Destination("*,*").
 		When().
-		Create()
+		Create().
+		AddSource("*")
 
 	repoFixture.Given(t, true).
 		When().
@@ -1598,9 +1601,11 @@ func TestSyncWithInfos(t *testing.T) {
 		})
 }
 
-//Given: argocd app create does not provide --dest-namespace
-//       Manifest contains resource console which does not require namespace
-//Expect: no app.Status.Conditions
+// Given: argocd app create does not provide --dest-namespace
+//
+//	Manifest contains resource console which does not require namespace
+//
+// Expect: no app.Status.Conditions
 func TestCreateAppWithNoNameSpaceForGlobalResource(t *testing.T) {
 	Given(t).
 		Path(globalWithNoNameSpace).
@@ -1615,10 +1620,12 @@ func TestCreateAppWithNoNameSpaceForGlobalResource(t *testing.T) {
 		})
 }
 
-//Given: argocd app create does not provide --dest-namespace
-//       Manifest contains resource deployment, and service which requires namespace
-//       Deployment and service do not have namespace in manifest
-//Expect: app.Status.Conditions for deployment ans service which does not have namespace in manifest
+// Given: argocd app create does not provide --dest-namespace
+//
+//	Manifest contains resource deployment, and service which requires namespace
+//	Deployment and service do not have namespace in manifest
+//
+// Expect: app.Status.Conditions for deployment ans service which does not have namespace in manifest
 func TestCreateAppWithNoNameSpaceWhenRequired(t *testing.T) {
 	Given(t).
 		Path(guestbookPath).
@@ -1636,11 +1643,13 @@ func TestCreateAppWithNoNameSpaceWhenRequired(t *testing.T) {
 		})
 }
 
-//Given: argocd app create does not provide --dest-namespace
-//       Manifest contains resource deployment, and service which requires namespace
-//       Some deployment and service has namespace in manifest
-//       Some deployment and service does not have namespace in manifest
-//Expect: app.Status.Conditions for deployment and service which does not have namespace in manifest
+// Given: argocd app create does not provide --dest-namespace
+//
+//	Manifest contains resource deployment, and service which requires namespace
+//	Some deployment and service has namespace in manifest
+//	Some deployment and service does not have namespace in manifest
+//
+// Expect: app.Status.Conditions for deployment and service which does not have namespace in manifest
 func TestCreateAppWithNoNameSpaceWhenRequired2(t *testing.T) {
 	Given(t).
 		Path(guestbookWithNamespace).
@@ -1716,10 +1725,13 @@ func TestListResource(t *testing.T) {
 }
 
 // Given application is set with --sync-option CreateNamespace=true
-//       application --dest-namespace does not exist
+//
+//	application --dest-namespace does not exist
+//
 // Verity application --dest-namespace is created
-//        application sync successful
-//        when application is deleted, --dest-namespace is not deleted
+//
+//	application sync successful
+//	when application is deleted, --dest-namespace is not deleted
 func TestNamespaceAutoCreation(t *testing.T) {
 	SkipOnEnv(t, "OPENSHIFT")
 	updatedNamespace := getNewNamespace(t)
@@ -2062,4 +2074,314 @@ func TestDisableManifestGeneration(t *testing.T) {
 		And(func(app *Application) {
 			assert.Equal(t, app.Status.SourceType, ApplicationSourceTypeDirectory)
 		})
+}
+
+func TestSwitchTrackingMethod(t *testing.T) {
+	ctx := Given(t)
+
+	ctx.
+		SetTrackingMethod(string(argo.TrackingMethodAnnotation)).
+		Path("deployment").
+		When().
+		CreateApp().
+		Sync().
+		Refresh(RefreshTypeNormal).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add resource with tracking annotation. This should put the
+			// application OutOfSync.
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other-configmap",
+					Annotations: map[string]string{
+						common.AnnotationKeyAppInstance: fmt.Sprintf("%s:/ConfigMap:%s/other-configmap", Name(), DeploymentNamespace()),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeOutOfSync)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Delete resource to bring application back in sync
+			FailOnErr(nil, KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Delete(context.Background(), "other-configmap", metav1.DeleteOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		SetTrackingMethod(string(argo.TrackingMethodLabel)).
+		Sync().
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add a resource with a tracking annotation. This should not
+			// affect the application, because we now use the tracking method
+			// "label".
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other-configmap",
+					Annotations: map[string]string{
+						common.AnnotationKeyAppInstance: fmt.Sprintf("%s:/ConfigMap:%s/other-configmap", Name(), DeploymentNamespace()),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add a resource with the tracking label. The app should become
+			// OutOfSync.
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "extra-configmap",
+					Labels: map[string]string{
+						common.LabelKeyAppInstance: Name(),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeOutOfSync)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Delete resource to bring application back in sync
+			FailOnErr(nil, KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Delete(context.Background(), "extra-configmap", metav1.DeleteOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy))
+}
+
+func TestSwitchTrackingLabel(t *testing.T) {
+	ctx := Given(t)
+
+	ctx.
+		Path("deployment").
+		When().
+		CreateApp().
+		Sync().
+		Refresh(RefreshTypeNormal).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add extra resource that carries the default tracking label
+			// We expect the app to go out of sync.
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other-configmap",
+					Labels: map[string]string{
+						common.LabelKeyAppInstance: Name(),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeOutOfSync)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Delete resource to bring application back in sync
+			FailOnErr(nil, KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Delete(context.Background(), "other-configmap", metav1.DeleteOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		// Change tracking label
+		SetTrackingLabel("argocd.tracking").
+		Sync().
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Create resource with the new tracking label, the application
+			// is expected to go out of sync
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other-configmap",
+					Labels: map[string]string{
+						"argocd.tracking": Name(),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeOutOfSync)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Delete resource to bring application back in sync
+			FailOnErr(nil, KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Delete(context.Background(), "other-configmap", metav1.DeleteOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add extra resource that carries the default tracking label
+			// We expect the app to stay in sync, because the configured
+			// label is different.
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other-configmap",
+					Labels: map[string]string{
+						common.LabelKeyAppInstance: Name(),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy))
+}
+
+func TestAnnotationTrackingExtraResources(t *testing.T) {
+	ctx := Given(t)
+
+	SetTrackingMethod(string(argo.TrackingMethodAnnotation))
+	ctx.
+		Path("deployment").
+		When().
+		CreateApp().
+		Sync().
+		Refresh(RefreshTypeNormal).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add a resource with an annotation that is not referencing the
+			// resource.
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "extra-configmap",
+					Annotations: map[string]string{
+						common.AnnotationKeyAppInstance: fmt.Sprintf("%s:apps/Deployment:%s/guestbook-cm", Name(), DeploymentNamespace()),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Refresh(RefreshTypeNormal).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		Sync("--prune").
+		And(func() {
+			// The extra configmap must not be pruned, because it's not tracked
+			cm, err := KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Get(context.Background(), "extra-configmap", metav1.GetOptions{})
+			require.NoError(t, err)
+			require.Equal(t, "extra-configmap", cm.Name)
+		}).
+		And(func() {
+			// Add a resource with an annotation that is self-referencing the
+			// resource.
+			FailOnErr(KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Create(context.Background(), &v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other-configmap",
+					Annotations: map[string]string{
+						common.AnnotationKeyAppInstance: fmt.Sprintf("%s:/ConfigMap:%s/other-configmap", Name(), DeploymentNamespace()),
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Refresh(RefreshTypeNormal).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeOutOfSync)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		Sync("--prune").
+		And(func() {
+			// The extra configmap must be pruned now, because it's tracked
+			cm, err := KubeClientset.CoreV1().ConfigMaps(DeploymentNamespace()).Get(context.Background(), "other-configmap", metav1.GetOptions{})
+			require.Error(t, err)
+			require.Equal(t, "", cm.Name)
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add a cluster-scoped resource that is not referencing itself
+			FailOnErr(KubeClientset.RbacV1().ClusterRoles().Create(context.Background(), &rbacv1.ClusterRole{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "e2e-test-clusterrole",
+					Annotations: map[string]string{
+						common.AnnotationKeyAppInstance: fmt.Sprintf("%s:rbac.authorization.k8s.io/ClusterRole:%s/e2e-other-clusterrole", Name(), DeploymentNamespace()),
+					},
+					Labels: map[string]string{
+						fixture.TestingLabel: "true",
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Refresh(RefreshTypeNormal).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		And(func() {
+			// Add a cluster-scoped resource that is referencing itself
+			FailOnErr(KubeClientset.RbacV1().ClusterRoles().Create(context.Background(), &rbacv1.ClusterRole{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "e2e-other-clusterrole",
+					Annotations: map[string]string{
+						common.AnnotationKeyAppInstance: fmt.Sprintf("%s:rbac.authorization.k8s.io/ClusterRole:%s/e2e-other-clusterrole", Name(), DeploymentNamespace()),
+					},
+					Labels: map[string]string{
+						fixture.TestingLabel: "true",
+					},
+				},
+			}, metav1.CreateOptions{}))
+		}).
+		Refresh(RefreshTypeNormal).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeOutOfSync)).
+		Expect(HealthIs(health.HealthStatusHealthy)).
+		When().
+		Sync("--prune").
+		And(func() {
+			// The extra configmap must be pruned now, because it's tracked and does not exist in git
+			cr, err := KubeClientset.RbacV1().ClusterRoles().Get(context.Background(), "e2e-other-clusterrole", metav1.GetOptions{})
+			require.Error(t, err)
+			require.Equal(t, "", cr.Name)
+		}).
+		Then().
+		Expect(OperationPhaseIs(OperationSucceeded)).
+		Expect(SyncStatusIs(SyncStatusCodeSynced)).
+		Expect(HealthIs(health.HealthStatusHealthy))
+
 }

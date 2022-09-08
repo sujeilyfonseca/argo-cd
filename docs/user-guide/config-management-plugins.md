@@ -14,7 +14,7 @@ There are two ways to install a Config Management Plugin (CMP):
 1. Add the plugin config to the Argo CD ConfigMap. The repo-server container will run your plugin's commands.
    This is a good option for a simple plugin that requires only a few lines of code that fit nicely in the Argo CD ConfigMap.
 2. Add the plugin as a sidecar to the repo-server Pod.
-   This is a good option for a more complex plugin that would clutter the Argo CD ConfigMap.
+   This is a good option for a more complex plugin that would clutter the Argo CD ConfigMap. A copy of the repository is sent to the sidecar container as a tarball and processed individually per application, which makes it a good option for [concurrent processing of monorepos](../operator-manual/high_availability.md#enable-concurrent-processing).
 
 ### Option 1: Configure plugins via Argo CD configmap
 
@@ -235,16 +235,17 @@ If you don't need to set any environment variables, you can set an empty plugin 
     is 90s. So if you increase the repo server timeout greater than 90s, be sure to set `ARGOCD_EXEC_TIMEOUT` on the
     sidecar.
 
-## Tarball stream filtering
+## Plugin tar stream exclusions
 
 In order to increase the speed of manifest generation, certain files and folders can be excluded from being sent to your
 plugin. We recommend excluding your `.git` folder if it isn't necessary. Use Go's 
 [filepatch.Match](https://pkg.go.dev/path/filepath#Match) syntax.
 
 You can set it one of three ways:
+
 1. The `--plugin-tar-exclude` argument on the repo server.
 2. The `reposerver.plugin.tar.exclusions` key if you are using `argocd-cmd-params-cm`
-3. Directly setting 'ARGOCD_REPO_SERVER_PLUGIN_TAR_EXCLUSIONS' environment variable on the repo server.
+3. Directly setting `ARGOCD_REPO_SERVER_PLUGIN_TAR_EXCLUSIONS` environment variable on the repo server.
 
 For option 1, the flag can be repeated multiple times. For option 2 and 3, you can specify multiple globs by separating
 them with semicolons.
