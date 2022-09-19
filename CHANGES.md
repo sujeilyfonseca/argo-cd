@@ -1,11 +1,11 @@
 # ArgoCD
 Forked from: [argoproj/argo-cd](https://github.com/argoproj/argo-cd)
 
-## v2.4.11 (Base)
-Argo CD's latest stable release, as of July 7, 2022, is v2.4.4. The list of Argo CD releases can be accessed [here](https://github.com/argoproj/argo-cd/releases)
+## v2.4.12 (Base)
+Argo CD's latest stable release, as of September 16, 2022, is v2.4.12. The list of Argo CD releases can be accessed [here](https://github.com/argoproj/argo-cd/releases)
 
-## v2.4.11-patched (Fork)
-The changes were rebased based on v2.4.11. The following section details the enhancements made to Argo CD Extensions that were integrated into Argo CD.
+## v2.4.12-patched (Fork)
+The changes were rebased based on v2.4.12. The following section details the enhancements made to Argo CD Extensions that were integrated into Argo CD.
 
 ### Resource Customization ConfigMap
 Pulls in resource overrides from the resource customization `ConfigMap`. This `ConfigMap` will only exist if created by 
