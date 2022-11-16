@@ -1,0 +1,12 @@
+# CODEOWNERS
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+# @zhengyi will be requested for
+# review when someone opens a pull request.
+*       @zhengyi
+*       @ARCHU-S-M
+*       @David-Gay
+*       @joseph-stanley
+*       @Rahul-Mourya2
+*       @sujeily-fonseca
+*       @Sujesh-T
