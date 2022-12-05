@@ -1543,61 +1543,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_ENABLE_LEADER_ELECTION
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.enable.leader.election
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_NAMESPACE
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.namespace
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_REPO_SERVER
-          valueFrom:
-            configMapKeyRef:
-              key: repo.server
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_POLICY
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.policy
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_DEBUG
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.debug
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_LOGFORMAT
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.log.format
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_LOGLEVEL
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.log.level
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_APPLICATIONSET_CONTROLLER_DRY_RUN
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.dryrun
-              name: argocd-cmd-params-cm
-              optional: true
-        - name: ARGOCD_GIT_MODULES_ENABLED
-          valueFrom:
-            configMapKeyRef:
-              key: applicationsetcontroller.enable.git.submodule
-              name: argocd-cmd-params-cm
-              optional: true
-        image: quay.io/argoproj/argocd:latest
+        image: quay.io/argoproj/argocd:v2.5.3
         imagePullPolicy: Always
         name: argocd-applicationset-controller
         ports:
@@ -1707,7 +1653,7 @@ spec:
         - -n
         - /usr/local/bin/argocd
         - /shared/argocd-dex
-        image: quay.io/argoproj/argocd:latest
+        image: quay.io/argoproj/argocd:v2.5.3
         imagePullPolicy: Always
         name: copyutil
         securityContext:
@@ -1760,7 +1706,7 @@ spec:
       containers:
       - command:
         - argocd-notifications
-        image: quay.io/argoproj/argocd:latest
+        image: quay.io/argoproj/argocd:v2.5.3
         imagePullPolicy: Always
         livenessProbe:
           tcpSocket:
@@ -2063,7 +2009,7 @@ spec:
           value: /helm-working-dir
         - name: HELM_DATA_HOME
           value: /helm-working-dir
-        image: quay.io/argoproj/argocd:latest
+        image: quay.io/argoproj/argocd:v2.5.3
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3
@@ -2115,7 +2061,7 @@ spec:
         - -n
         - /usr/local/bin/argocd
         - /var/run/argocd/argocd-cmp-server
-        image: quay.io/argoproj/argocd:latest
+        image: quay.io/argoproj/argocd:v2.5.3
         name: copyutil
         securityContext:
           allowPrivilegeEscalation: false
@@ -2388,7 +2334,7 @@ spec:
               key: application.namespaces
               name: argocd-cmd-params-cm
               optional: true
-        image: quay.io/argoproj/argocd:latest
+        image: quay.io/argoproj/argocd:v2.5.3
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -2624,7 +2570,7 @@ spec:
               key: application.namespaces
               name: argocd-cmd-params-cm
               optional: true
-        image: quay.io/argoproj/argocd:latest
+        image: quay.io/argoproj/argocd:v2.5.3
         imagePullPolicy: Always
         name: argocd-application-controller
         ports:

@@ -57,9 +57,8 @@ export const ApplicationResourceList = ({
                         </div>
                         <div className='columns small-2 xxxlarge-2'>{[res.group, res.kind].filter(item => !!item).join('/')}</div>
                         <div className='columns small-1 xxxlarge-2'>{res.syncWave || '-'}</div>
-                        <div className='columns small-2 xxxlarge-2'>{res.namespace}</div>
-                        <div className='columns small-2 xxxlarge-2'>{res.createdAt}</div>
-                        <div className='columns small-1 xxxlarge-1'>
+                        <div className='columns small-3 xxxlarge-3'>{res.namespace}</div>
+                        <div className='columns small-2 xxxlarge-2'>
                             {res.health && (
                                 <React.Fragment>
                                     <HealthStatusIcon state={res.health} /> {res.health.status} &nbsp;
