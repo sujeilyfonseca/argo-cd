@@ -401,10 +401,11 @@ func (c *liveStateCache) getCluster(server string) (clustercache.ClusterCache, e
 		clustercache.SetPopulateResourceInfoHandler(func(un *unstructured.Unstructured, isRoot bool) (interface{}, bool) {
 			res := &ResourceInfo{}
 			populateNodeInfo(un, res)
-			// Removed the RLock()/RUnlock() along with reading of cacheSettings for addressing the issue where argocd application get stuck in refresh indefinitely.
-			// This goroutine already have the write lock above and trying to acquire the RLock() again here leads to a deadlock.
-
+			c.lock.RLock()
+			cacheSettings := c.cacheSettings
+			c.lock.RUnlock()
 			res.Health, _ = health.GetResourceHealth(un, cacheSettings.clusterSettings.ResourceHealthOverride)
+
 			appName := c.resourceTracking.GetAppName(un, cacheSettings.appInstanceLabelKey, cacheSettings.trackingMethod)
 			if isRoot && appName != "" {
 				res.AppName = appName
@@ -528,7 +529,7 @@ func (c *liveStateCache) GetManagedLiveObjs(a *appv1.Application, targetObjs []*
 		return nil, err
 	}
 	return clusterInfo.GetManagedLiveObjs(targetObjs, func(r *clustercache.Resource) bool {
-		return resInfo(r).AppName == a.Name
+		return resInfo(r).AppName == a.InstanceName(c.settingsMgr.GetNamespace())
 	})
 }
 

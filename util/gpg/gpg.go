@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/argoproj/argo-cd/v2/common"
 	appsv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -154,19 +155,23 @@ func getGPGEnviron() []string {
 
 // Helper function to write some data to a temp file and return its path
 func writeKeyToFile(keyData string) (string, error) {
-	f, err := ioutil.TempFile("", "gpg-public-key")
+	f, err := os.CreateTemp("", "gpg-public-key")
 	if err != nil {
 		return "", err
 	}
 
-	err = ioutil.WriteFile(f.Name(), []byte(keyData), 0600)
+	err = os.WriteFile(f.Name(), []byte(keyData), 0600)
 	if err != nil {
 		_ = os.Remove(f.Name())
 		return "", err
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			// TODO: Log this error in future
+		err = f.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				common.SecurityField:    common.SecurityMedium,
+				common.SecurityCWEField: 775,
+			}).Errorf("error closing file %q: %v", f.Name(), err)
 		}
 	}()
 	return f.Name(), nil
@@ -252,12 +257,12 @@ func InitializeGnuPG() error {
 		}
 	}
 
-	err = ioutil.WriteFile(filepath.Clean(filepath.Join(gnuPgHome, canaryMarkerFilename)), []byte("canary"), 0600)
+	err = os.WriteFile(filepath.Join(gnuPgHome, canaryMarkerFilename), []byte("canary"), 0644)
 	if err != nil {
 		return fmt.Errorf("could not create canary: %v", err)
 	}
 
-	f, err := ioutil.TempFile("", "gpg-key-recipe")
+	f, err := os.CreateTemp("", "gpg-key-recipe")
 	if err != nil {
 		return err
 	}
@@ -270,8 +275,12 @@ func InitializeGnuPG() error {
 	}
 
 	defer func() {
-		if err := f.Close(); err != nil {
-			// TODO: Log this error in future
+		err = f.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				common.SecurityField:    common.SecurityMedium,
+				common.SecurityCWEField: 775,
+			}).Errorf("error closing file %q: %v", f.Name(), err)
 		}
 	}()
 
@@ -283,7 +292,7 @@ func InitializeGnuPG() error {
 }
 
 func ImportPGPKeysFromString(keyData string) ([]*appsv1.GnuPGPublicKey, error) {
-	f, err := ioutil.TempFile("", "gpg-key-import")
+	f, err := os.CreateTemp("", "gpg-key-import")
 	if err != nil {
 		return nil, err
 	}
@@ -293,8 +302,12 @@ func ImportPGPKeysFromString(keyData string) ([]*appsv1.GnuPGPublicKey, error) {
 		return nil, err
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			// TODO: Log this error in future
+		err = f.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				common.SecurityField:    common.SecurityMedium,
+				common.SecurityCWEField: 775,
+			}).Errorf("error closing file %q: %v", f.Name(), err)
 		}
 	}()
 	return ImportPGPKeys(f.Name())
@@ -355,7 +368,7 @@ func ValidatePGPKeysFromString(keyData string) (map[string]*appsv1.GnuPGPublicKe
 // is, they contain all relevant information
 func ValidatePGPKeys(keyFile string) (map[string]*appsv1.GnuPGPublicKey, error) {
 	keys := make(map[string]*appsv1.GnuPGPublicKey)
-	tempHome, err := ioutil.TempDir("", "gpg-verify-key")
+	tempHome, err := os.MkdirTemp("", "gpg-verify-key")
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +418,7 @@ func SetPGPTrustLevel(pgpKeys []*appsv1.GnuPGPublicKey, trustLevel string) error
 	}
 
 	// We need to store ownertrust specification in a temp file. Format is <fingerprint>:<level>
-	f, err := ioutil.TempFile("", "gpg-key-fps")
+	f, err := os.CreateTemp("", "gpg-key-fps")
 	if err != nil {
 		return err
 	}
@@ -420,8 +433,12 @@ func SetPGPTrustLevel(pgpKeys []*appsv1.GnuPGPublicKey, trustLevel string) error
 	}
 
 	defer func() {
-		if err := f.Close(); err != nil {
-			// TODO: Log this error in future
+		err = f.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				common.SecurityField:    common.SecurityMedium,
+				common.SecurityCWEField: 775,
+			}).Errorf("error closing file %q: %v", f.Name(), err)
 		}
 	}()
 

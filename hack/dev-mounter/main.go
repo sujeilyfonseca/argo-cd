@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -87,8 +86,8 @@ func newCommand() *cobra.Command {
 				}
 				// Create or update files that are specified in ConfigMap
 				for name, data := range cm.Data {
-					p := filepath.Clean(path.Join(destPath, name))
-					err := ioutil.WriteFile(p, []byte(data), 0600)
+					p := path.Join(destPath, name)
+					err := os.WriteFile(p, []byte(data), 0644)
 					if err != nil {
 						log.Warnf("Failed to create file %s: %v", p, err)
 					}
