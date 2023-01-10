@@ -138,31 +138,6 @@ func newServiceWithCommitSHA(root, revision string) *Service {
 	return service
 }
 
-// createSymlink creates a symlink with name linkName to file destName in
-// workingDir
-func createSymlink(t *testing.T, workingDir, destName, linkName string) error {
-	oldWorkingDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	if workingDir != "" {
-		err = os.Chdir(workingDir)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if err := os.Chdir(oldWorkingDir); err != nil {
-				t.Fatal(err.Error())
-			}
-		}()
-	}
-	err = os.Symlink(destName, linkName)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func TestGenerateYamlManifestInDir(t *testing.T) {
 	service := newService("../../manifests/base")
 

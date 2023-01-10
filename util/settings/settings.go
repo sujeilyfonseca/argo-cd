@@ -1692,6 +1692,7 @@ func (a *ArgoCDSettings) TLSConfig() *tls.Config {
 	}
 	return &tls.Config{
 		RootCAs:    certPool,
+		MinVersion: tls.VersionTLS12,
 	}
 }
 

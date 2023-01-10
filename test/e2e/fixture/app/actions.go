@@ -136,11 +136,7 @@ func (a *Actions) CreateFromFile(handler func(app *Application), flags ...string
 		"app", "create",
 		"-f", tmpFile.Name(),
 	}, flags...)
-	defer func() {
-		if err := tmpFile.Close(); err != nil {
-			errors.CheckError(err)
-		}
-	}()
+	defer tmpFile.Close()
 	a.runCli(args...)
 	return a
 }
