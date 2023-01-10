@@ -23,6 +23,7 @@ const (
 const (
 	ArgoCDConfigMapName              = "argocd-cm"
 	ArgoCDSecretName                 = "argocd-secret"
+	ArgoCDResourceOverrideConfigMapName = "argocd-resource-override-cm"
 	ArgoCDNotificationsConfigMapName = "argocd-notifications-cm"
 	ArgoCDNotificationsSecretName    = "argocd-notifications-secret"
 	ArgoCDRBACConfigMapName          = "argocd-rbac-cm"
