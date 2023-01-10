@@ -5,7 +5,6 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -44,6 +43,7 @@ const (
 	DefaultTestUserPassword = "password"
 	TestingLabel            = "e2e.argoproj.io"
 	ArgoCDNamespace         = "argocd-e2e"
+	ArgoCDAppNamespace      = "argocd-e2e-external"
 
 	// ensure all repos are in one directory tree, so we can easily clean them up
 	TmpDir             = "/tmp/argo-e2e"
@@ -113,6 +113,10 @@ const (
 // running in.
 func TestNamespace() string {
 	return GetEnvWithDefault("ARGOCD_E2E_NAMESPACE", ArgoCDNamespace)
+}
+
+func AppNamespace() string {
+	return GetEnvWithDefault("ARGOCD_E2E_APP_NAMESPACE", ArgoCDAppNamespace)
 }
 
 // getKubeConfig creates new kubernetes client config using specified config path and config overrides variables
@@ -190,8 +194,9 @@ func init() {
 		}
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			errors.CheckError(err)
+		err := f.Close()
+		if err != nil {
+			panic(fmt.Sprintf("Could not close record file %s: %v", rf, err))
 		}
 	}()
 	scanner := bufio.NewScanner(f)
@@ -312,6 +317,11 @@ func CreateSecret(username, password string) string {
 // Convenience wrapper for updating argocd-cm
 func updateSettingConfigMap(updater func(cm *corev1.ConfigMap) error) {
 	updateGenericConfigMap(common.ArgoCDConfigMapName, updater)
+}
+
+// Convenience wrapper for updating argocd-notifications-cm
+func updateNotificationsConfigMap(updater func(cm *corev1.ConfigMap) error) {
+	updateGenericConfigMap(common.ArgoCDNotificationsConfigMapName, updater)
 }
 
 // Convenience wrapper for updating argocd-cm-rbac
@@ -499,6 +509,13 @@ func SetParamInSettingConfigMap(key, value string) {
 	})
 }
 
+func SetParamInNotificationsConfigMap(key, value string) {
+	updateNotificationsConfigMap(func(cm *corev1.ConfigMap) error {
+		cm.Data[key] = value
+		return nil
+	})
+}
+
 func EnsureCleanState(t *testing.T) {
 	// In large scenarios, we can skip tests that already run
 	SkipIfAlreadyRun(t)
@@ -513,6 +530,7 @@ func EnsureCleanState(t *testing.T) {
 	// delete resources
 	// kubectl delete apps --all
 	CheckError(AppClientset.ArgoprojV1alpha1().Applications(TestNamespace()).DeleteCollection(context.Background(), v1.DeleteOptions{PropagationPolicy: &policy}, v1.ListOptions{}))
+	CheckError(AppClientset.ArgoprojV1alpha1().Applications(AppNamespace()).DeleteCollection(context.Background(), v1.DeleteOptions{PropagationPolicy: &policy}, v1.ListOptions{}))
 	// kubectl delete appprojects --field-selector metadata.name!=default
 	CheckError(AppClientset.ArgoprojV1alpha1().AppProjects(TestNamespace()).DeleteCollection(context.Background(),
 		v1.DeleteOptions{PropagationPolicy: &policy}, v1.ListOptions{FieldSelector: "metadata.name!=default"}))
@@ -539,6 +557,11 @@ func EnsureCleanState(t *testing.T) {
 		return nil
 	})
 
+	updateNotificationsConfigMap(func(cm *corev1.ConfigMap) error {
+		cm.Data = map[string]string{}
+		return nil
+	})
+
 	// reset rbac
 	updateRBACConfigMap(func(cm *corev1.ConfigMap) error {
 		cm.Data = map[string]string{}
@@ -559,6 +582,7 @@ func EnsureCleanState(t *testing.T) {
 		SourceRepos:              []string{"*"},
 		Destinations:             []v1alpha1.ApplicationDestination{{Namespace: "*", Server: "*"}},
 		ClusterResourceWhitelist: []v1.GroupKind{{Group: "*", Kind: "*"}},
+		SourceNamespaces:         []string{AppNamespace()},
 	})
 
 	// Create separate project for testing gpg signature verification
@@ -569,6 +593,7 @@ func EnsureCleanState(t *testing.T) {
 		Destinations:             []v1alpha1.ApplicationDestination{{Namespace: "*", Server: "*"}},
 		ClusterResourceWhitelist: []v1.GroupKind{{Group: "*", Kind: "*"}},
 		SignatureKeys:            []v1alpha1.SignatureKey{{KeyID: GpgGoodKeyID}},
+		SourceNamespaces:         []string{AppNamespace()},
 	})
 
 	// Recreate temp dir
@@ -645,8 +670,8 @@ func Patch(path string, jsonPatch string) {
 
 	log.WithFields(log.Fields{"path": path, "jsonPatch": jsonPatch}).Info("patching")
 
-	filename := filepath.Clean(filepath.Join(repoDirectory(), path))
-	bytes, err := ioutil.ReadFile(filepath.Clean(filename))
+	filename := filepath.Join(repoDirectory(), path)
+	bytes, err := os.ReadFile(filename)
 	CheckError(err)
 
 	patch, err := jsonpatch.DecodePatch([]byte(jsonPatch))
@@ -670,7 +695,7 @@ func Patch(path string, jsonPatch string) {
 		CheckError(err)
 	}
 
-	CheckError(ioutil.WriteFile(filename, bytes, 0600))
+	CheckError(os.WriteFile(filename, bytes, 0644))
 	FailOnErr(Run(repoDirectory(), "git", "diff"))
 	FailOnErr(Run(repoDirectory(), "git", "commit", "-am", "patch"))
 	if IsRemote() {
@@ -694,7 +719,7 @@ func Delete(path string) {
 func WriteFile(path, contents string) {
 	log.WithFields(log.Fields{"path": path}).Info("adding")
 
-	CheckError(ioutil.WriteFile(filepath.Clean(filepath.Join(repoDirectory(), path)), []byte(contents), 0600))
+	CheckError(os.WriteFile(filepath.Join(repoDirectory(), path), []byte(contents), 0644))
 }
 
 func AddFile(path, contents string) {
@@ -727,10 +752,10 @@ func AddSignedFile(path, contents string) {
 // create the resource by creating using "kubectl apply", with bonus templating
 func Declarative(filename string, values interface{}) (string, error) {
 
-	bytes, err := ioutil.ReadFile(filepath.Clean(path.Join("testdata", filename)))
+	bytes, err := os.ReadFile(path.Join("testdata", filename))
 	CheckError(err)
 
-	tmpFile, err := ioutil.TempFile("", "")
+	tmpFile, err := os.CreateTemp("", "")
 	CheckError(err)
 	_, err = tmpFile.WriteString(Tmpl(string(bytes), values))
 	CheckError(err)
@@ -743,6 +768,8 @@ func Declarative(filename string, values interface{}) (string, error) {
 }
 
 func CreateSubmoduleRepos(repoType string) {
+	oldEnv := os.Getenv("GIT_ALLOW_PROTOCOL")
+	CheckError(os.Setenv("GIT_ALLOW_PROTOCOL", "file"))
 
 	// set-up submodule repo
 	FailOnErr(Run("", "cp", "-Rf", "testdata/git-submodule/", submoduleDirectory()))
@@ -774,6 +801,8 @@ func CreateSubmoduleRepos(repoType string) {
 		FailOnErr(Run(submoduleParentDirectory(), "git", "remote", "add", "origin", os.Getenv("ARGOCD_E2E_GIT_SERVICE_SUBMODULE_PARENT")))
 		FailOnErr(Run(submoduleParentDirectory(), "git", "push", "origin", "master", "-f"))
 	}
+
+	CheckError(os.Setenv("GIT_ALLOW_PROTOCOL", oldEnv))
 }
 
 // RestartRepoServer performs a restart of the repo server deployment and waits
@@ -852,8 +881,9 @@ func RecordTestRun(t *testing.T) {
 		t.Fatalf("could not open record file %s: %v", rf, err)
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			errors.CheckError(err)
+		err := f.Close()
+		if err != nil {
+			t.Fatalf("could not close record file %s: %v", rf, err)
 		}
 	}()
 	if _, err := f.WriteString(fmt.Sprintf("%s\n", t.Name())); err != nil {
