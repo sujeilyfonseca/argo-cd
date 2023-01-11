@@ -653,3 +653,13 @@ help:
 	@echo '  codegen(-local) -- if using -local, run the following targets first'
 	@echo '  install-codegen-tools-local -- run this to install the codegen tools'
 	@echo '  install-go-tools-local -- run this to install go libraries for codegen'
+
+# Build the docker image
+.PHONY: docker-build
+docker-build:
+	DOCKER_BUILDKIT=1 docker build -t ${IMG} .
+
+# Push the docker image
+.PHONY: docker-push
+docker-push:
+	docker push ${IMG}

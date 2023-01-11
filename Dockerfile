@@ -1,4 +1,5 @@
-ARG BASE_IMAGE=docker.io/library/ubuntu:22.04@sha256:0bced47fffa3361afa981854fcabcd4577cd43cebbb808cea2b1f33a3dd7f508
+ARG BASE_IMAGE=docker.io/library/ubuntu:22.10
+
 ####################################################################################################
 # Builder image
 # Initial stage which pulls prepares build dependencies and CLI tooling we need for our final image
@@ -42,6 +43,24 @@ RUN git clone -b v3.13.1 https://github.com/helm/helm && \
 FROM golang:1.21.3 as kustomize-builder
 WORKDIR /
 RUN GOBIN=$(pwd)/ GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v5@latest
+
+
+####################################################################################################
+# Build helm
+####################################################################################################
+FROM golang:1.19 as helm-builder
+WORKDIR /
+RUN git clone -b v3.9.4 https://github.com/helm/helm && \
+    cd helm && \
+    make install
+
+####################################################################################################
+# Build kustomize
+####################################################################################################
+FROM golang:1.19 as kustomize-builder
+WORKDIR /
+RUN GOBIN=$(pwd)/ GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v4@latest
+
 
 ####################################################################################################
 # Argo CD Base - used as the base for both the release and dev argocd images

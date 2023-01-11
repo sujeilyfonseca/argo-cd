@@ -137,7 +137,11 @@ func (c *Cmd) RepoAdd(name string, url string, opts Creds, passCredentials bool)
 		if err != nil {
 			return "", err
 		}
-		defer certFile.Close()
+		defer func() {
+			if err := certFile.Close(); err != nil {
+				// TODO: Log this error in future
+			}
+		}()
 		args = append(args, "--cert-file", certFile.Name())
 	}
 
@@ -150,7 +154,11 @@ func (c *Cmd) RepoAdd(name string, url string, opts Creds, passCredentials bool)
 		if err != nil {
 			return "", err
 		}
-		defer keyFile.Close()
+		defer func() {
+			if err := keyFile.Close(); err != nil {
+				// TODO: Log this error in future
+			}
+		}()
 		args = append(args, "--key-file", keyFile.Name())
 	}
 
