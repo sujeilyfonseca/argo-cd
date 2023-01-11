@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"net/url"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -39,6 +40,11 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/kube"
 	"github.com/argoproj/argo-cd/v2/util/password"
 	tlsutil "github.com/argoproj/argo-cd/v2/util/tls"
+)
+
+const (
+	extensionsPath         = "/tmp/extensions"
+	extensionsResourcesDir = "resources"
 )
 
 // ArgoCDSettings holds in-memory runtime configuration options.
@@ -659,6 +665,26 @@ func (mgr *SettingsManager) getConfigMap() (*apiv1.ConfigMap, error) {
 	return argoCDCM, err
 }
 
+func (mgr *SettingsManager) getResourceOverrideConfigMap() (*apiv1.ConfigMap, error) {
+	err := mgr.ensureSynced(false)
+	if err != nil {
+		return nil, err
+	}
+	log.Infof("checking for configmap %s", common.ArgoCDResourceOverrideConfigMapName)
+	cm, err := mgr.configmaps.ConfigMaps(mgr.namespace).Get(common.ArgoCDResourceOverrideConfigMapName)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Infof("failed to find configmap %s", common.ArgoCDResourceOverrideConfigMapName)
+			return nil, nil
+		} else {
+			log.Infof("error getting configmap %s", common.ArgoCDResourceOverrideConfigMapName)
+			return nil, err
+		}
+	}
+	log.Infof("found configmap %s in %s with %d entries", cm.Name, cm.Namespace, len(cm.Data))
+	return cm, err
+}
+
 // Returns the ConfigMap with the given name from the cluster.
 // The ConfigMap must be labeled with "app.kubernetes.io/part-of: argocd" in
 // order to be retrievable.
@@ -811,6 +837,30 @@ func (mgr *SettingsManager) GetResourceOverrides() (map[string]v1alpha1.Resource
 	err = mgr.appendResourceOverridesFromSplitKeys(argoCDCM.Data, resourceOverrides)
 	if err != nil {
 		return nil, err
+	}
+
+	resourceOverrideCM, err := mgr.getResourceOverrideConfigMap()
+	if err != nil {
+		return nil, err
+	}
+	if resourceOverrideCM != nil && resourceOverrideCM.Data != nil {
+		log.Infof("loading resource override ConfigMap...")
+		additionalResourceOverrides := map[string]v1alpha1.ResourceOverride{}
+		if value, ok := resourceOverrideCM.Data["resources"]; ok && value != "" {
+			err := yaml.Unmarshal([]byte(value), &additionalResourceOverrides)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for key, resourceOverride := range additionalResourceOverrides {
+			if _, exists := resourceOverrides[key]; exists {
+				log.Info(fmt.Sprintf("resource override \"%s\" is already defined by the ConfigMap; skipping...", key))
+			} else {
+				resourceOverrides[key] = resourceOverride
+				log.Info(fmt.Sprintf("added resource override \"%s\"", key))
+			}
+		}
 	}
 
 	var diffOptions ArgoCDDiffOptions
@@ -1718,6 +1768,7 @@ func (a *ArgoCDSettings) TLSConfig() *tls.Config {
 	}
 	return &tls.Config{
 		RootCAs: certPool,
+		MinVersion: tls.VersionTLS12,
 	}
 }
 
@@ -1814,7 +1865,7 @@ func appendURLPath(inputURL string, inputPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	u.Path = path.Join(u.Path, inputPath)
+	u.Path = filepath.Clean(path.Join(u.Path, inputPath))
 	return u.String(), nil
 }
 

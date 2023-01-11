@@ -162,7 +162,7 @@ func writeKeyToFile(keyData string) (string, error) {
 
 	err = os.WriteFile(f.Name(), []byte(keyData), 0600)
 	if err != nil {
-		os.Remove(f.Name())
+		_ = os.Remove(f.Name())
 		return "", err
 	}
 	defer func() {
@@ -181,7 +181,7 @@ func writeKeyToFile(keyData string) (string, error) {
 // This must only be called on container startup, when no gpg-agent is running
 // yet, otherwise key generation will fail.
 func removeKeyRing(path string) error {
-	_, err := os.Stat(filepath.Join(path, canaryMarkerFilename))
+	_, err := os.Stat(filepath.Clean(filepath.Join(path, canaryMarkerFilename)))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("refusing to remove directory %s: it's not initialized by Argo CD", path)
@@ -189,11 +189,15 @@ func removeKeyRing(path string) error {
 			return err
 		}
 	}
-	rd, err := os.Open(path)
+	rd, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return err
 	}
-	defer rd.Close()
+	defer func() {
+		if err := rd.Close(); err != nil {
+			// TODO: Log this error in future
+		}
+	}()
 	dns, err := rd.Readdirnames(-1)
 	if err != nil {
 		return err
@@ -202,7 +206,7 @@ func removeKeyRing(path string) error {
 		if p == "." || p == ".." {
 			continue
 		}
-		err := os.RemoveAll(filepath.Join(path, p))
+		err := os.RemoveAll(filepath.Clean(filepath.Join(path, p)))
 		if err != nil {
 			return err
 		}
@@ -373,7 +377,10 @@ func ValidatePGPKeys(keyFile string) (map[string]*appsv1.GnuPGPublicKey, error) 
 	// Remember original GNUPGHOME, then set it to temp directory
 	oldGPGHome := os.Getenv(common.EnvGnuPGHome)
 	defer os.Setenv(common.EnvGnuPGHome, oldGPGHome)
-	os.Setenv(common.EnvGnuPGHome, tempHome)
+	err = os.Setenv(common.EnvGnuPGHome, tempHome)
+	if err != nil {
+		return nil, err
+	}
 
 	// Import they keys to our temporary keyring...
 	_, err = ImportPGPKeys(keyFile)
@@ -734,12 +741,12 @@ func SyncKeyRingFromDirectory(basePath string) ([]string, []string, error) {
 	// First, add all keys that are found in the configuration but are not yet in the keyring
 	for key := range configured {
 		if _, ok := installed[key]; !ok {
-			addedKey, err := ImportPGPKeys(path.Join(basePath, key))
+			addedKey, err := ImportPGPKeys(filepath.Clean(path.Join(basePath, key)))
 			if err != nil {
 				return nil, nil, err
 			}
 			if len(addedKey) != 1 {
-				return nil, nil, fmt.Errorf("Invalid key found in %s", path.Join(basePath, key))
+				return nil, nil, fmt.Errorf("Invalid key found in %s", filepath.Clean(path.Join(basePath, key)))
 			}
 			importedKey, err := GetInstalledPGPKeys([]string{addedKey[0].KeyID})
 			if err != nil {
