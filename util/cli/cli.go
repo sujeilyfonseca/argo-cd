@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -172,9 +173,9 @@ func ReadAndConfirmPassword(username string) (string, error) {
 func SetLogFormat(logFormat string) {
 	switch strings.ToLower(logFormat) {
 	case utillog.JsonFormat:
-		os.Setenv(common.EnvLogFormat, utillog.JsonFormat)
+		_ = os.Setenv(common.EnvLogFormat, utillog.JsonFormat)
 	case utillog.TextFormat, "":
-		os.Setenv(common.EnvLogFormat, utillog.TextFormat)
+		_ = os.Setenv(common.EnvLogFormat, utillog.TextFormat)
 	default:
 		log.Fatalf("Unknown log format '%s'", logFormat)
 	}
@@ -186,7 +187,7 @@ func SetLogFormat(logFormat string) {
 func SetLogLevel(logLevel string) {
 	level, err := log.ParseLevel(text.FirstNonEmpty(logLevel, log.InfoLevel.String()))
 	errors.CheckError(err)
-	os.Setenv(common.EnvLogLevel, level.String())
+	_ = os.Setenv(common.EnvLogLevel, level.String())
 	log.SetLevel(level)
 }
 
@@ -294,7 +295,7 @@ func PrintDiff(name string, live *unstructured.Unstructured, target *unstructure
 	if err != nil {
 		return err
 	}
-	targetFile := path.Join(tempDir, name)
+	targetFile := filepath.Clean(path.Join(tempDir, name))
 	targetData := []byte("")
 	if target != nil {
 		targetData, err = yaml.Marshal(target)
@@ -306,7 +307,7 @@ func PrintDiff(name string, live *unstructured.Unstructured, target *unstructure
 	if err != nil {
 		return err
 	}
-	liveFile := path.Join(tempDir, fmt.Sprintf("%s-live.yaml", name))
+	liveFile := filepath.Clean(path.Join(tempDir, fmt.Sprintf("%s-live.yaml", name)))
 	liveData := []byte("")
 	if live != nil {
 		liveData, err = yaml.Marshal(live)

@@ -85,7 +85,7 @@ func Inbound(candidate, baseDir string) bool {
 	if filepath.IsAbs(candidate) {
 		target = filepath.Clean(candidate)
 	} else {
-		target = filepath.Join(baseDir, candidate)
+		target = filepath.Clean(filepath.Join(baseDir, candidate))
 	}
 	return strings.HasPrefix(target, filepath.Clean(baseDir)+string(os.PathSeparator))
 }
