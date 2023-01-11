@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	cmdutil "github.com/argoproj/argo-cd/v2/cmd/util"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -61,7 +63,10 @@ func NewMetricsServer(host string, port int) *MetricsServer {
 		registry,
 		prometheus.DefaultGatherer,
 	}, promhttp.HandlerOpts{}))
-	profile.RegisterProfiler(mux)
+	
+	if cmdutil.LogLevel == "debug" {
+		profile.RegisterProfiler(mux)
+	}
 
 	registry.MustRegister(redisRequestCounter)
 	registry.MustRegister(redisRequestHistogram)

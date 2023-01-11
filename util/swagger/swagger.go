@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"path/filepath"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -19,8 +20,8 @@ func ServeSwaggerUI(mux *http.ServeMux, swaggerJSON string, uiPath string, rootP
 		_, _ = fmt.Fprint(w, swaggerJSON)
 	})
 
-	specURL := path.Join(prefix, rootPath, "swagger.json")
-	scriptURL := path.Join(prefix, rootPath, "assets", "scripts", redocScriptName)
+	specURL := filepath.Clean(path.Join(prefix, rootPath, "swagger.json"))
+	scriptURL := filepath.Clean(path.Join(prefix, rootPath, "assets", "scripts", redocScriptName))
 	mux.Handle(uiPath, middleware.Redoc(middleware.RedocOpts{
 		BasePath: prefix,
 		SpecURL:  specURL,

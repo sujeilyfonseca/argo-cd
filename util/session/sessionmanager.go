@@ -2,10 +2,11 @@ package session
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"math"
-	"math/rand"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
@@ -428,9 +429,14 @@ func (mgr *SessionManager) VerifyUsernamePassword(username string, password stri
 	start := time.Now()
 	if mgr.verificationDelayNoiseEnabled {
 		defer func() {
+			nBig, err := rand.Int(rand.Reader, big.NewInt(27))
+			if err != nil {
+				panic(err)
+			}
+			n := nBig.Int64() % (verificationDelayNoiseMax.Nanoseconds() - verificationDelayNoiseMin.Nanoseconds())
+
 			// introduces random delay to protect from timing-based user enumeration attack
-			delayNanoseconds := verificationDelayNoiseMin.Nanoseconds() +
-				int64(rand.Intn(int(verificationDelayNoiseMax.Nanoseconds()-verificationDelayNoiseMin.Nanoseconds())))
+			delayNanoseconds := verificationDelayNoiseMin.Nanoseconds() + n
 			// take into account amount of time spent since the request start
 			delayNanoseconds = delayNanoseconds - time.Since(start).Nanoseconds()
 			if delayNanoseconds > 0 {

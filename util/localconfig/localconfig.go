@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -273,11 +274,11 @@ func DefaultConfigDir() (string, error) {
 
 	// Manually configured XDG config home
 	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
-		return path.Join(xdgConfigHome, "argocd"), nil
+		return filepath.Clean(path.Join(xdgConfigHome, "argocd")), nil
 	}
 
 	// XDG config home fallback
-	return path.Join(homeDir, ".config", "argocd"), nil
+	return filepath.Clean(path.Join(homeDir, ".config", "argocd")), nil
 }
 
 func getHomeDir() (string, error) {
@@ -296,7 +297,7 @@ func DefaultLocalConfigPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return path.Join(dir, "config"), nil
+	return filepath.Clean(path.Join(dir, "config")), nil
 }
 
 // Get username from subject in a claim
