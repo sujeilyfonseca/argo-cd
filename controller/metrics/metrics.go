@@ -18,6 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/argoproj/argo-cd/v2/common"
+	
+	cmdutil "github.com/argoproj/argo-cd/v2/cmd/util"
 	argoappv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	applister "github.com/argoproj/argo-cd/v2/pkg/client/listers/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/git"
@@ -169,7 +171,11 @@ func NewMetricsServer(addr string, appLister applister.ApplicationLister, appFil
 		// contains workqueue metrics, process and golang metrics
 		ctrl_metrics.Registry,
 	}, promhttp.HandlerOpts{}))
-	profile.RegisterProfiler(mux)
+	
+	if cmdutil.LogLevel == "debug" {
+		profile.RegisterProfiler(mux)
+	}
+	
 	healthz.ServeHealthCheck(mux, healthCheck)
 
 	registry.MustRegister(syncCounter)

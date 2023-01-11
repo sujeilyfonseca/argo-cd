@@ -127,7 +127,7 @@ func ParseTLSCertificatesFromData(data string) ([]string, error) {
 
 // Parse TLS certificates from a file
 func ParseTLSCertificatesFromPath(sourceFile string) ([]string, error) {
-	fileHandle, err := os.Open(sourceFile)
+	fileHandle, err := os.Open(filepath.Clean(sourceFile))
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func ParseSSHKnownHostsFromData(data string) ([]string, error) {
 
 // Parse SSH Known Hosts data from a file
 func ParseSSHKnownHostsFromPath(sourceFile string) ([]string, error) {
-	fileHandle, err := os.Open(sourceFile)
+	fileHandle, err := os.Open(filepath.Clean(sourceFile))
 	if err != nil {
 		return nil, err
 	}

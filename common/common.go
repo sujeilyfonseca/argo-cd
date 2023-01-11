@@ -30,6 +30,7 @@ const (
 // Kubernetes ConfigMap and Secret resource names which hold Argo CD settings
 const (
 	ArgoCDConfigMapName              = "argocd-cm"
+	ArgoCDResourceOverrideConfigMapName = "argocd-resource-override-cm"
 	ArgoCDSecretName                 = "argocd-secret"
 	ArgoCDNotificationsConfigMapName = "argocd-notifications-cm"
 	ArgoCDNotificationsSecretName    = "argocd-notifications-secret"
@@ -344,9 +345,9 @@ func GetCMPChunkSize() int {
 // This directory and all it's contents will be deleted durring CMP bootstrap.
 func GetCMPWorkDir() string {
 	if workDir := os.Getenv(EnvCMPWorkDir); workDir != "" {
-		return filepath.Join(workDir, DefaultCMPWorkDirName)
+		return filepath.Clean(filepath.Join(workDir, DefaultCMPWorkDirName))
 	}
-	return filepath.Join(os.TempDir(), DefaultCMPWorkDirName)
+	return filepath.Clean(filepath.Join(os.TempDir(), DefaultCMPWorkDirName))
 }
 
 const (
