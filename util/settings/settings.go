@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"net/url"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -1743,7 +1744,7 @@ func appendURLPath(inputURL string, inputPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	u.Path = path.Join(u.Path, inputPath)
+	u.Path = filepath.Clean(path.Join(u.Path, inputPath))
 	return u.String(), nil
 }
 
