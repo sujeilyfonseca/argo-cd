@@ -11,7 +11,7 @@ type subDirFs struct {
 }
 
 func (s subDirFs) Open(name string) (fs.File, error) {
-	return s.fs.Open(filepath.Join(s.dir, name))
+	return s.fs.Open(filepath.Clean(filepath.Join(s.dir, name)))
 }
 
 // NewSubDirFS returns file system that represents sub-directory in a wrapped file system
