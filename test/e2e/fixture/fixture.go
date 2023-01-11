@@ -183,7 +183,7 @@ func init() {
 	if rf == "" {
 		return
 	}
-	f, err := os.Open(rf)
+	f, err := os.Open(filepath.Clean(rf))
 	if err != nil {
 		if goerrors.Is(err, os.ErrNotExist) {
 			return
@@ -235,7 +235,7 @@ func Name() string {
 }
 
 func repoDirectory() string {
-	return path.Join(TmpDir, repoDir)
+	return filepath.Clean(path.Join(TmpDir, repoDir))
 }
 
 func submoduleDirectory() string {
@@ -616,11 +616,11 @@ func EnsureCleanState(t *testing.T) {
 	FailOnErr(Run("", "mkdir", "-p", TmpDir+"/gpg"))
 	FailOnErr(Run("", "chmod", "0700", TmpDir+"/gpg"))
 	prevGnuPGHome := os.Getenv("GNUPGHOME")
-	os.Setenv("GNUPGHOME", TmpDir+"/gpg")
+	_ = os.Setenv("GNUPGHOME", TmpDir+"/gpg")
 	// nolint:errcheck
-	Run("", "pkill", "-9", "gpg-agent")
+	_, _ = Run("", "pkill", "-9", "gpg-agent")
 	FailOnErr(Run("", "gpg", "--import", "../fixture/gpg/signingkey.asc"))
-	os.Setenv("GNUPGHOME", prevGnuPGHome)
+	_ = os.Setenv("GNUPGHOME", prevGnuPGHome)
 
 	// recreate GPG directories
 	if IsLocal() {
@@ -705,7 +705,7 @@ func Delete(path string) {
 
 	log.WithFields(log.Fields{"path": path}).Info("deleting")
 
-	CheckError(os.Remove(filepath.Join(repoDirectory(), path)))
+	CheckError(os.Remove(filepath.Clean(filepath.Join(repoDirectory(), path))))
 
 	FailOnErr(Run(repoDirectory(), "git", "diff"))
 	FailOnErr(Run(repoDirectory(), "git", "commit", "-am", "delete"))
@@ -737,7 +737,7 @@ func AddSignedFile(path, contents string) {
 	WriteFile(path, contents)
 
 	prevGnuPGHome := os.Getenv("GNUPGHOME")
-	os.Setenv("GNUPGHOME", TmpDir+"/gpg")
+	_ = os.Setenv("GNUPGHOME", TmpDir+"/gpg")
 	FailOnErr(Run(repoDirectory(), "git", "diff"))
 	FailOnErr(Run(repoDirectory(), "git", "add", "."))
 	FailOnErr(Run(repoDirectory(), "git", "-c", fmt.Sprintf("user.signingkey=%s", GpgGoodKeyID), "commit", "-S", "-am", "add file"))
@@ -757,7 +757,11 @@ func Declarative(filename string, values interface{}) (string, error) {
 	CheckError(err)
 	_, err = tmpFile.WriteString(Tmpl(string(bytes), values))
 	CheckError(err)
-	defer tmpFile.Close()
+	defer func() {
+		if err := tmpFile.Close(); err != nil {
+			errors.CheckError(err)
+		}
+	}()
 	return Run("", "kubectl", "-n", TestNamespace(), "apply", "-f", tmpFile.Name())
 }
 
@@ -870,7 +874,7 @@ func RecordTestRun(t *testing.T) {
 		return
 	}
 	log.Infof("Registering test execution at %s", rf)
-	f, err := os.OpenFile(rf, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filepath.Clean(rf), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		t.Fatalf("could not open record file %s: %v", rf, err)
 	}
