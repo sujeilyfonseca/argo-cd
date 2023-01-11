@@ -7,11 +7,11 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/TomOnTime/utfutil v0.0.0-20180511104225-09c41003ee1d
-	github.com/alicebob/miniredis/v2 v2.23.1
-	github.com/argoproj/gitops-engine v0.7.1-0.20221208230615-917f5a0f16d5
-	github.com/argoproj/notifications-engine v0.3.1-0.20221203221941-490d98afd1d6
-	github.com/argoproj/pkg v0.13.7-0.20221221191914-44694015343d
-	github.com/aws/aws-sdk-go v1.44.164
+	github.com/alicebob/miniredis/v2 v2.14.2
+	github.com/argoproj/gitops-engine v0.7.1-0.20221004132320-98ccd3d43fd9
+	github.com/argoproj/notifications-engine v0.3.1-0.20220812180936-4d8552b0775f
+	github.com/argoproj/pkg v0.11.1-0.20211203175135-36c59d8fafe0
+	github.com/aws/aws-sdk-go v1.44.177
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/bradleyfalzon/ghinstallation/v2 v2.1.0
 	github.com/casbin/casbin/v2 v2.60.0
@@ -72,12 +72,12 @@ require (
 	github.com/valyala/fasttemplate v1.2.2
 	github.com/whilp/git-urls v0.0.0-20191001220047-6db9661140c0
 	github.com/xanzy/go-gitlab v0.60.0
-	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
-	golang.org/x/net v0.4.0 // indirect
+	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
+	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220608161450-d0670ef3b1eb
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
-	golang.org/x/term v0.3.0
+	golang.org/x/term v0.1.0
 	google.golang.org/genproto v0.0.0-20220107163113-42d7afdf6368
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
@@ -117,13 +117,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.11.1
 )
 
-require (
-	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
-	github.com/google/go-github/v45 v45.2.0 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/spf13/cast v1.4.1 // indirect
-)
+require github.com/emicklei/go-restful/v3 v3.10.1 // indirect
 
 require (
 	cloud.google.com/go v0.99.0 // indirect
@@ -165,10 +159,10 @@ require (
 	github.com/go-openapi/analysis v0.21.4 // indirect
 	github.com/go-openapi/errors v0.20.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/strfmt v0.21.3 // indirect
-	github.com/go-openapi/swag v0.21.1 // indirect
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1 // indirect
+	github.com/go-openapi/jsonreference v0.19.5 // indirect
+	github.com/go-openapi/strfmt v0.19.3 // indirect
+	github.com/go-openapi/swag v0.19.14 // indirect
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.4.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/btree v1.0.1 // indirect
@@ -190,7 +184,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
-	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
@@ -224,18 +218,19 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
-	go.mongodb.org/mongo-driver v1.10.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.11.1 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.11.1 // indirect
-	go.opentelemetry.io/otel/trace v1.11.1 // indirect
-	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
+	go.mongodb.org/mongo-driver v1.11.1 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.6.3 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.6.3 // indirect
+	go.opentelemetry.io/otel/trace v1.6.3 // indirect
+	go.opentelemetry.io/proto/otlp v0.15.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/exp v0.0.0-20210901193431-a062eea981d2 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	golang.org/x/tools v0.1.12 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gomodules.xyz/envconfig v1.3.1-0.20190308184047-426f31af0d45 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gomodules.xyz/notify v0.1.1 // indirect
@@ -257,12 +252,17 @@ require (
 )
 
 replace (
+	github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
+	github.com/aws/aws-sdk-go => github.com/aws/aws-sdk-go v1.44.177
+
 	// https://github.com/golang/go/issues/33546#issuecomment-519656923
 	github.com/go-check/check => github.com/go-check/check v0.0.0-20180628173108-788fd7840127
+	github.com/golang-jwt/jwt/v4 => github.com/golang-jwt/jwt/v4 v4.4.3
 
 	github.com/golang/protobuf => github.com/golang/protobuf v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway => github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/improbable-eng/grpc-web => github.com/improbable-eng/grpc-web v0.0.0-20181111100011-16092bd1d58a
+	go.mongodb.org/mongo-driver => go.mongodb.org/mongo-driver v1.11.1
 
 	// Avoid CVE-2022-3064
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
