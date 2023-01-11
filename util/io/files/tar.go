@@ -84,7 +84,7 @@ func Untgz(dstPath string, r io.Reader, maxSize int64, preserveFileMode bool) er
 			continue
 		}
 
-		target := filepath.Join(dstPath, header.Name)
+		target := filepath.Clean(filepath.Join(dstPath, header.Name))
 		// Sanity check to protect against zip-slip
 		if !Inbound(target, dstPath) {
 			return fmt.Errorf("illegal filepath in archive: %s", target)
@@ -102,7 +102,7 @@ func Untgz(dstPath string, r io.Reader, maxSize int64, preserveFileMode bool) er
 			}
 		case tar.TypeSymlink:
 			// Sanity check to protect against symlink exploit
-			linkTarget := filepath.Join(filepath.Dir(target), header.Linkname)
+			linkTarget := filepath.Clean(filepath.Join(filepath.Dir(target), header.Linkname))
 			realPath, err := filepath.EvalSymlinks(linkTarget)
 			if os.IsNotExist(err) {
 				realPath = linkTarget

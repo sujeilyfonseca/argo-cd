@@ -2,10 +2,11 @@ package session
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"math"
-	"math/rand"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
@@ -349,10 +350,20 @@ func (mgr *SessionManager) updateFailureCount(username string, failed bool) {
 	// replace it with the new one.
 	if failed && len(failures) >= getMaximumCacheSize() {
 		log.Warnf("Session cache size exceeds %d entries, removing random entry", getMaximumCacheSize())
-		rmUser := pickRandomNonAdminLoginFailure(failures, username)
-		if rmUser != nil {
-			delete(failures, *rmUser)
-			log.Infof("Deleted entry for user %s from cache", *rmUser)
+		nBig, err := rand.Int(rand.Reader, big.NewInt(27))
+		if err != nil {
+			panic(err)
+		}
+		idx := int(nBig.Int64()) % (len(failures) - 1)
+		var rmUser string
+		i := 0
+		for key := range failures {
+			if i == idx {
+				rmUser = key
+				delete(failures, key)
+				break
+			}
+			i++
 		}
 	}
 
@@ -428,9 +439,14 @@ func (mgr *SessionManager) VerifyUsernamePassword(username string, password stri
 	start := time.Now()
 	if mgr.verificationDelayNoiseEnabled {
 		defer func() {
+			nBig, err := rand.Int(rand.Reader, big.NewInt(27))
+			if err != nil {
+				panic(err)
+			}
+			n := nBig.Int64() % (verificationDelayNoiseMax.Nanoseconds() - verificationDelayNoiseMin.Nanoseconds())
+
 			// introduces random delay to protect from timing-based user enumeration attack
-			delayNanoseconds := verificationDelayNoiseMin.Nanoseconds() +
-				int64(rand.Intn(int(verificationDelayNoiseMax.Nanoseconds()-verificationDelayNoiseMin.Nanoseconds())))
+			delayNanoseconds := verificationDelayNoiseMin.Nanoseconds() + n
 			// take into account amount of time spent since the request start
 			delayNanoseconds = delayNanoseconds - time.Since(start).Nanoseconds()
 			if delayNanoseconds > 0 {

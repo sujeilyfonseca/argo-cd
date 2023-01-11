@@ -41,7 +41,7 @@ func resolveSymbolicLinkRecursive(path string, maxDepth int) (string, error) {
 	// path for further resolving
 	if !strings.HasPrefix(resolved, string(os.PathSeparator)) {
 		basePath := filepath.Dir(path)
-		resolved = filepath.Join(basePath, resolved)
+		resolved = filepath.Clean(filepath.Join(basePath, resolved))
 	}
 
 	return resolveSymbolicLinkRecursive(resolved, maxDepth-1)
@@ -147,9 +147,9 @@ func resolveFileOrDirectory(appPath string, repoRoot string, fileOrDirectory str
 		if err != nil {
 			return "", resolveFailure(repoRoot, err)
 		}
-		path = filepath.Join(absWorkDir, path)
+		path = filepath.Clean(filepath.Join(absWorkDir, path))
 	} else {
-		path = filepath.Join(absRepoPath, path)
+		path = filepath.Clean(filepath.Join(absRepoPath, path))
 	}
 
 	// Ensure any symbolic link is resolved before we evaluate the path

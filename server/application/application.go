@@ -2104,7 +2104,7 @@ func (s *Server) logResourceEvent(res *appv1.ResourceNode, ctx context.Context, 
 func (s *Server) ListResourceActions(ctx context.Context, q *application.ApplicationResourceRequest) (*application.ResourceActionsListResponse, error) {
 	obj, _, _, _, err := s.getUnstructuredLiveResourceOrApp(ctx, rbacpolicy.ActionGet, q)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting resource: %w", err)
 	}
 	resourceOverrides, err := s.settingsMgr.GetResourceOverrides()
 	if err != nil {
@@ -2185,7 +2185,7 @@ func (s *Server) RunResourceAction(ctx context.Context, q *application.ResourceA
 	actionRequest := fmt.Sprintf("%s/%s/%s/%s", rbacpolicy.ActionAction, q.GetGroup(), q.GetKind(), q.GetAction())
 	liveObj, res, a, config, err := s.getUnstructuredLiveResourceOrApp(ctx, actionRequest, resourceRequest)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting resource: %w", err)
 	}
 
 	liveObjBytes, err := json.Marshal(liveObj)
