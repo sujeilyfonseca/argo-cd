@@ -1,10 +1,10 @@
-ARG BASE_IMAGE=docker.io/library/ubuntu:22.10
+ARG BASE_IMAGE=docker.io/library/ubuntu:23.04
 ####################################################################################################
 # Builder image
 # Initial stage which pulls prepares build dependencies and CLI tooling we need for our final image
 # Also used as the image in CI jobs so needs all dependencies
 ####################################################################################################
-FROM docker.io/library/golang:1.19 AS builder
+FROM docker.io/library/golang:1.19.5 AS builder
 
 RUN echo 'deb http://deb.debian.org/debian buster-backports main' >> /etc/apt/sources.list
 
@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     unzip \
     fcgiwrap \
     git \
-    git-lfs \
     make \
     wget \
     gcc \
@@ -28,23 +27,23 @@ WORKDIR /tmp
 COPY hack/install.sh hack/tool-versions.sh ./
 COPY hack/installers installers
 
-RUN ./install.sh helm-linux && \
-    INSTALL_PATH=/usr/local/bin ./install.sh kustomize
-
+RUN rm -rf /usr/local/bin/helm && \
+    rm -rf /usr/local/bin/kustomize && \
+    rm -rf /usr/bin/git-lfs
 
 ####################################################################################################
 # Build helm
 ####################################################################################################
-FROM golang:1.19 as helm-builder
+FROM golang:1.19.5 as helm-builder
 WORKDIR /
-RUN git clone -b v3.9.4 https://github.com/helm/helm && \
+RUN git clone -b v3.10.3 https://github.com/helm/helm && \
     cd helm && \
     make install
 
 ####################################################################################################
 # Build kustomize
 ####################################################################################################
-FROM golang:1.19 as kustomize-builder
+FROM golang:1.19.5 as kustomize-builder
 WORKDIR /
 RUN GOBIN=$(pwd)/ GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v4@latest
 
@@ -68,9 +67,9 @@ RUN groupadd -g 999 argocd && \
     apt-get dist-upgrade -y && \
     apt-get install -y git tini gpg tzdata wget && \
     # START - Install git-lfs
-    wget https://github.com/git-lfs/git-lfs/releases/download/v3.2.0/git-lfs-linux-amd64-v3.2.0.tar.gz && \
-    tar -xvf git-lfs-linux-amd64-v3.2.0.tar.gz && \
-    cp ./git-lfs-3.2.0/git-lfs /usr/bin/git-lfs && \
+    wget https://github.com/git-lfs/git-lfs/releases/download/v3.3.0/git-lfs-linux-amd64-v3.3.0.tar.gz && \
+    tar -xvf git-lfs-linux-amd64-v3.3.0.tar.gz && \
+    cp ./git-lfs-3.3.0/git-lfs /usr/bin/git-lfs && \
     # END - Install git-lfs
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -103,7 +102,7 @@ WORKDIR /home/argocd
 ####################################################################################################
 # Argo CD UI stage
 ####################################################################################################
-FROM --platform=$BUILDPLATFORM docker.io/library/node:18.9.0 AS argocd-ui
+FROM --platform=$BUILDPLATFORM docker.io/library/node:19.4.0 AS argocd-ui
 
 WORKDIR /src
 COPY ["ui/package.json", "ui/yarn.lock", "./"]
@@ -122,7 +121,7 @@ RUN HOST_ARCH=$TARGETARCH NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OP
 ####################################################################################################
 # Argo CD Build stage which performs the actual build of Argo CD binaries
 ####################################################################################################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.19 AS argocd-build
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.19.5 AS argocd-build
 
 WORKDIR /go/src/github.com/argoproj/argo-cd
 
