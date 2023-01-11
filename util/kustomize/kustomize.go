@@ -210,7 +210,7 @@ var KustomizationNames = []string{"kustomization.yaml", "kustomization.yml", "Ku
 // kustomization is a file that describes a configuration consumable by kustomize.
 func (k *kustomize) findKustomization() (string, error) {
 	for _, file := range KustomizationNames {
-		kustomization := filepath.Join(k.path, file)
+		kustomization := filepath.Clean(filepath.Join(k.path, file))
 		if _, err := os.Stat(kustomization); err == nil {
 			return kustomization, nil
 		}

@@ -66,7 +66,7 @@ func (a *argoCDService) GetFiles(ctx context.Context, repoURL string, revision s
 
 	res := map[string][]byte{}
 	for _, filePath := range paths {
-		bytes, err := os.ReadFile(filepath.Join(gitRepoClient.Root(), filePath))
+		bytes, err := os.ReadFile(filepath.Clean(filepath.Join(gitRepoClient.Root(), filePath)))
 		if err != nil {
 			return nil, err
 		}

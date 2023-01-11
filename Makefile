@@ -589,3 +589,13 @@ snyk-non-container-tests:
 .PHONY: snyk-report
 snyk-report:
 	./hack/snyk-report.sh $(target_branch)
+
+# Build the docker image
+.PHONY: docker-build
+docker-build:
+	DOCKER_BUILDKIT=1 docker build -t ${IMG} .
+
+# Push the docker image
+.PHONY: docker-push
+docker-push:
+	docker push ${IMG}
