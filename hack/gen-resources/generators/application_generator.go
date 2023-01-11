@@ -2,9 +2,9 @@ package generator
 
 import (
 	"context"
+	"crypto/rand"
 	"log"
-	"math/rand"
-	"time"
+	"math/big"
 
 	"github.com/argoproj/argo-cd/v2/util/settings"
 
@@ -31,8 +31,12 @@ func NewApplicationGenerator(argoClientSet *appclientset.Clientset, clientSet *k
 }
 
 func (pg *ApplicationGenerator) buildRandomSource(repositories []*v1alpha1.Repository) (*v1alpha1.ApplicationSource, error) {
-	rand.Seed(time.Now().Unix())
-	repoNumber := rand.Int() % len(repositories)
+	nbig, err := rand.Int(rand.Reader, big.NewInt(27))
+	if err != nil {
+		panic(err)
+	}
+	repoNumber := int(nbig.Int64()) % len(repositories)
+
 	return &v1alpha1.ApplicationSource{
 		RepoURL:        repositories[repoNumber].Repo,
 		Path:           "helm-guestbook",
@@ -50,7 +54,12 @@ func (ag *ApplicationGenerator) buildSource(opts *util.GenerateOpts, repositorie
 
 func (pg *ApplicationGenerator) buildRandomDestination(opts *util.GenerateOpts, clusters []v1alpha1.Cluster) (*v1alpha1.ApplicationDestination, error) {
 	rand.Seed(time.Now().Unix())
-	clusterNumber := rand.Int() % len(clusters)
+	nBig, err := rand.Int(rand.Reader, big.NewInt(27))
+	if err != nil {
+		panic(err)
+	}
+	clusterNumber := int(nBig.Int64()) % len(clusters)
+	
 	return &v1alpha1.ApplicationDestination{
 		Namespace: opts.Namespace,
 		Name:      clusters[clusterNumber].Name,
