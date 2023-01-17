@@ -27,10 +27,6 @@ WORKDIR /tmp
 COPY hack/install.sh hack/tool-versions.sh ./
 COPY hack/installers installers
 
-RUN rm -rf /usr/local/bin/helm && \
-    rm -rf /usr/local/bin/kustomize && \
-    rm -rf /usr/bin/git-lfs
-
 ####################################################################################################
 # Build helm
 ####################################################################################################
@@ -46,7 +42,6 @@ RUN git clone -b v3.10.3 https://github.com/helm/helm && \
 FROM golang:1.19.5 as kustomize-builder
 WORKDIR /
 RUN GOBIN=$(pwd)/ GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v4@latest
-
 
 ####################################################################################################
 # Argo CD Base - used as the base for both the release and dev argocd images
