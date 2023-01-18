@@ -28,7 +28,7 @@ var (
 
 const (
 	// ASKPASS_NONCE_ENV is the environment variable that is used to pass the nonce to the askpass script
-	ASKPASS_NONCE_ENV = "ARGOCD_GIT_ASKPASS_NONCE"
+	ASKPASS_NONCE_ENV = "ARGOCD_GIT_ASKPASS_NONCE" // #nosec G101
 	// githubAccessTokenUsername is a username that is used to with the github access token
 	githubAccessTokenUsername = "x-access-token"
 )

@@ -25,7 +25,7 @@ const (
 	ArgoCDResourceOverrideConfigMapName = "argocd-resource-override-cm"
 	ArgoCDSecretName                 = "argocd-secret"
 	ArgoCDNotificationsConfigMapName = "argocd-notifications-cm"
-	ArgoCDNotificationsSecretName    = "argocd-notifications-secret"
+	ArgoCDNotificationsSecretName    = "argocd-notifications-secret" // #nosec G101
 	ArgoCDRBACConfigMapName          = "argocd-rbac-cm"
 	// Contains SSH known hosts data for connecting repositories. Will get mounted as volume to pods
 	ArgoCDKnownHostsConfigMapName = "argocd-ssh-known-hosts-cm"
@@ -232,7 +232,7 @@ const (
 	DefaultCMPChunkSize = 1024
 
 	// DefaultCMPWorkDirName defines the work directory name used by the cmp-server
-	DefaultCMPWorkDirName = "_cmp_server"
+	DefaultCMPWorkDirName = "_cmp_server" // #nosec G101
 
 	ConfigMapPluginDeprecationWarning = "argocd-cm plugins are deprecated, and support will be removed in v2.6. Upgrade your plugin to be installed via sidecar. https://argo-cd.readthedocs.io/en/stable/user-guide/config-management-plugins/"
 
