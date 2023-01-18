@@ -214,6 +214,7 @@ func GetRepoHTTPClient(repoURL string, insecure bool, creds Creds, proxyURL stri
 		Proxy: proxyFunc,
 		TLSClientConfig: &tls.Config{
 			GetClientCertificate: clientCertFunc,
+			MinVersion: tls.VersionTLS12,
 		},
 		DisableKeepAlives: true,
 	}

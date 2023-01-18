@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"testing"
-	"path/filepath"
 	"time"
 
 	"github.com/ghodss/yaml"

@@ -135,7 +135,7 @@ func TestTLS(address string, dialTime time.Duration) (*TLSTestResult, error) {
 	if err == nil {
 		_ = conn.Close()
 		testResult.TLS = true
-		creds := credentials.NewTLS(&tls.Config{})
+		creds := credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
 		ctx, cancel := context.WithTimeout(context.Background(), dialTime)
 		defer cancel()
 

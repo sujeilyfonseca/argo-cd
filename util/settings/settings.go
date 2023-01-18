@@ -1734,7 +1734,7 @@ func (a *ArgoCDSettings) OIDCTLSConfig() *tls.Config {
 
 	oidcConfig := a.OIDCConfig()
 	if oidcConfig != nil {
-		tlsConfig = &tls.Config{}
+		tlsConfig = &tls.Config{MinVersion: tls.VersionTLS12}
 		if oidcConfig.RootCA != "" {
 			certPool := x509.NewCertPool()
 			ok := certPool.AppendCertsFromPEM([]byte(oidcConfig.RootCA))
