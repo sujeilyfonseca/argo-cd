@@ -1,0 +1,64 @@
+version: '1'
+
+test:
+  dind: true
+  abort_on_failure: false
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.5
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    
+    curl -O https://dl.google.com/go/go1.16.11.linux-amd64.tar.gz
+    tar -C /usr/local -xzf go1.16.11.linux-amd64.tar.gz
+    export PATH=$PATH:/usr/local/go/bin
+    go version
+    
+    sudo apt-get update
+    sudo apt-get --yes install build-essential
+    sudo apt-get --yes install git
+    
+    git config --global user.name "John Doe"
+    git config --global user.email "john.doe@example.com"
+    
+    make install-test-tools-local
+    go mod download
+    make test-local
+
+static-scan:
+  abort_on_failure: false
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.5
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    source /cicd-scripts/static_scan.sh
+
+containerize:
+  dind: true
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.5
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    source /cicd-scripts/build_setup.sh
+    source /cicd-scripts/build.sh
+    
+deploy:
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.5
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    echo 'TODO: Connect to CD'
+
+acceptance-test:
+  abort_on_failure: false
+  image: us.icr.io/cloudrock_dev/onepipeline-task-image:v1.3.5
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    echo 'TODO: Run acceptance tests'
+
+release:
+  image: us.icr.io/cloudrock_dev/onepipeline-automation-image:v1.3.5
+  script: |
+    #!/usr/bin/env bash
+    source /cicd-scripts/before_each.sh
+    echo 'TODO: Release'
