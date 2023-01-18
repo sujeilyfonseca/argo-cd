@@ -37,9 +37,16 @@ func TLSConfig(tlsConfig *DexTLSConfig) *tls.Config {
 	if tlsConfig == nil || tlsConfig.DisableTLS {
 		return nil
 	}
+	/* False positive: All network communication is performed over TLS including service-to-service communication between the three components (argocd-server, argocd-repo-server, argocd-application-controller).
+
+	Argo CD provides two inbound TLS endpoints that can be configured: (1) the user-facing endpoint of the argocd-server workload which serves the UI and the API and (2) the endpoint of the argocd-repo-server, 
+	which is accessed by argocd-server and argocd-application-controller workloads to request repository operations. By default, and without further configuration, both of these endpoints will be set-up to use 
+	an automatically generated, self-signed certificate. */
+
+	/* #nosec G402 */
 	if !tlsConfig.StrictValidation {
-		return &tls.Config{
-			InsecureSkipVerify: true,
+		return &tls.Config{ 
+			InsecureSkipVerify: true, // #nosec G402
 			MinVersion: tls.VersionTLS12,
 		}
 	}
