@@ -5,11 +5,12 @@ import (
 	"crypto/rand"
 	"log"
 	"math/big"
+	"time"
+
+	mathrand "math/rand"
 
 	"github.com/argoproj/argo-cd/v2/util/settings"
-
 	"github.com/argoproj/argo-cd/v2/util/db"
-
 	"github.com/argoproj/argo-cd/v2/hack/gen-resources/util"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +54,7 @@ func (ag *ApplicationGenerator) buildSource(opts *util.GenerateOpts, repositorie
 }
 
 func (pg *ApplicationGenerator) buildRandomDestination(opts *util.GenerateOpts, clusters []v1alpha1.Cluster) (*v1alpha1.ApplicationDestination, error) {
-	rand.Seed(time.Now().Unix())
+	mathrand.Seed(time.Now().Unix())
 	nBig, err := rand.Int(rand.Reader, big.NewInt(27))
 	if err != nil {
 		panic(err)
