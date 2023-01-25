@@ -427,7 +427,8 @@ func (mgr *SessionManager) VerifyUsernamePassword(username string, password stri
 			n := nBig.Int64() % (verificationDelayNoiseMax.Nanoseconds() - verificationDelayNoiseMin.Nanoseconds())
 
 			// introduces random delay to protect from timing-based user enumeration attack
-			delayNanoseconds := verificationDelayNoiseMin.Nanoseconds() + n
+			delayNanoseconds := verificationDelayNoiseMin.Nanoseconds() +
+				int64(rand.Intn(int(verificationDelayNoiseMax.Nanoseconds()-verificationDelayNoiseMin.Nanoseconds())))
 			// take into account amount of time spent since the request start
 			delayNanoseconds = delayNanoseconds - time.Since(start).Nanoseconds()
 			if delayNanoseconds > 0 {

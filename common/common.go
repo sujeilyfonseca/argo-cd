@@ -319,5 +319,3 @@ const (
 const TokenVerificationError = "failed to verify the token"
 
 var TokenVerificationErr = errors.New(TokenVerificationError)
-
-var PermissionDeniedAPIError = status.Error(codes.PermissionDenied, "permission denied")
