@@ -2416,6 +2416,18 @@ func (s *Service) TestRepository(ctx context.Context, q *apiclient.TestRepositor
 	if repo.Type == "" {
 		repo.Type = "git"
 	}
+	// Temporary solution to provide whitelisting of repo, this should be replace with a more generic approach and then contributed back to OSS
+	// Parse the URL string
+	parsedURL, parseErr := url.Parse(repo.Repo)
+	if parseErr != nil {
+		return nil, fmt.Errorf("invalid URL provided: %w", parseErr)
+	}
+
+	if parsedURL.Host != "github.ibm.com" {
+		err := errors.New("not a valid host, only repo from github.ibm.com are allowed")
+		return nil, fmt.Errorf("error validating repo %w", err)
+	}
+
 	checks := map[string]func() error{
 		"git": func() error {
 			return git.TestRepo(repo.Repo, repo.GetGitCreds(s.gitCredsStore), repo.IsInsecure(), repo.IsLFSEnabled(), repo.Proxy)

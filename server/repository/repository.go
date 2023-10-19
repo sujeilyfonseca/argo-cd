@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 
 	"context"
@@ -383,6 +384,17 @@ func (s *Server) CreateRepository(ctx context.Context, q *repositorypkg.RepoCrea
 
 	var repo *appsv1.Repository
 	var err error
+
+	// Temporary solution to provide whitelisting of repo, this should be replace with a more generic approach and then contributed back to OSS
+	// Parse the URL string
+	parsedURL, err := url.Parse(q.Repo.Repo)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL provided: %w", err)
+	}
+
+	if parsedURL.Host != "github.ibm.com" {
+		return nil, fmt.Errorf("not a valid host, only repo from github.ibm.com are allowed")
+	}
 
 	// check we can connect to the repo, copying any existing creds (not supported for project scoped repositories)
 	if q.Repo.Project == "" {
