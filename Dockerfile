@@ -32,7 +32,7 @@ COPY hack/installers installers
 ####################################################################################################
 FROM golang:1.21.3 as helm-builder
 WORKDIR /
-RUN git clone -b v3.13.1 https://github.com/helm/helm && \
+RUN git clone -b v3.13.1-patched https://github.com/sujeilyfonseca/helm.git && \
     cd helm && \
     make install
 
@@ -51,7 +51,6 @@ FROM $BASE_IMAGE AS argocd-base
 LABEL org.opencontainers.image.source="https://github.com/argoproj/argo-cd"
 
 USER root
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN groupadd -g 999 argocd && \
@@ -158,5 +157,7 @@ RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-server && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-applicationset-controller && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-k8s-auth
 
-USER $ARGOCD_USER_ID
+RUN  helm version
+
+USER 999
 ENTRYPOINT ["/usr/bin/tini", "--"]
