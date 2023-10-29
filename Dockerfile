@@ -4,7 +4,7 @@ ARG BASE_IMAGE=docker.io/library/ubuntu:22.04@sha256:0bced47fffa3361afa981854fca
 # Initial stage which pulls prepares build dependencies and CLI tooling we need for our final image
 # Also used as the image in CI jobs so needs all dependencies
 ####################################################################################################
-FROM docker.io/library/golang:1.20.10@sha256:ed6c4a5918b0a1ffb97970f6493d742dc5c7ebf3ccbd417c215d52830b57b994 AS builder
+FROM docker.io/library/golang:1.21.3 AS builder
 
 RUN echo 'deb http://deb.debian.org/debian buster-backports main' >> /etc/apt/sources.list
 
@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     unzip \
     fcgiwrap \
     git \
-    git-lfs \
     make \
     wget \
     gcc \
@@ -28,8 +27,21 @@ WORKDIR /tmp
 COPY hack/install.sh hack/tool-versions.sh ./
 COPY hack/installers installers
 
-RUN ./install.sh helm-linux && \
-    INSTALL_PATH=/usr/local/bin ./install.sh kustomize
+####################################################################################################
+# Build helm
+####################################################################################################
+FROM golang:1.21.3 as helm-builder
+WORKDIR /
+RUN git clone -b v3.13.1 https://github.com/helm/helm && \
+    cd helm && \
+    make install
+
+####################################################################################################
+# Build kustomize
+####################################################################################################
+FROM golang:1.21.3 as kustomize-builder
+WORKDIR /
+RUN GOBIN=$(pwd)/ GO111MODULE=on go install sigs.k8s.io/kustomize/kustomize/v5@latest
 
 ####################################################################################################
 # Argo CD Base - used as the base for both the release and dev argocd images
@@ -40,25 +52,29 @@ LABEL org.opencontainers.image.source="https://github.com/argoproj/argo-cd"
 
 USER root
 
-ENV ARGOCD_USER_ID=999
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN groupadd -g $ARGOCD_USER_ID argocd && \
-    useradd -r -u $ARGOCD_USER_ID -g argocd argocd && \
+RUN groupadd -g 999 argocd && \
+    useradd -r -u 999 -g argocd argocd && \
     mkdir -p /home/argocd && \
     chown argocd:0 /home/argocd && \
     chmod g=u /home/argocd && \
     apt-get update && \
+    apt-get upgrade -y && \
     apt-get dist-upgrade -y && \
-    apt-get install -y \
-    git git-lfs tini gpg tzdata && \
+    apt-get install -y git tini gpg tzdata wget && \
+    # START - Install git-lfs
+    wget https://github.com/git-lfs/git-lfs/releases/download/v3.3.0/git-lfs-linux-amd64-v3.3.0.tar.gz && \
+    tar -xvf git-lfs-linux-amd64-v3.3.0.tar.gz && \
+    cp ./git-lfs-3.3.0/git-lfs /usr/bin/git-lfs && \
+    # END - Install git-lfs
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
-COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
-COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
+COPY --from=helm-builder /helm/bin/helm /usr/local/bin/helm
+COPY --from=kustomize-builder /kustomize /usr/local/bin/kustomize
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 # keep uid_entrypoint.sh for backward compatibility
 RUN ln -s /usr/local/bin/entrypoint.sh /usr/local/bin/uid_entrypoint.sh
@@ -77,18 +93,19 @@ RUN mkdir -p tls && \
 
 ENV USER=argocd
 
-USER $ARGOCD_USER_ID
+USER 999
 WORKDIR /home/argocd
 
 ####################################################################################################
 # Argo CD UI stage
 ####################################################################################################
-FROM --platform=$BUILDPLATFORM docker.io/library/node:20.3.1@sha256:2f0b0c15f97441defa812268ee943bbfaaf666ea6cf7cac62ee3f127906b35c6 AS argocd-ui
+FROM --platform=$BUILDPLATFORM docker.io/library/node:20.9.0 AS argocd-ui
 
 WORKDIR /src
 COPY ["ui/package.json", "ui/yarn.lock", "./"]
 
-RUN yarn install --network-timeout 200000 && \
+RUN yarn --update-checksums && \
+    yarn install --network-timeout 200000 && \
     yarn cache clean
 
 COPY ["ui/", "."]
@@ -101,7 +118,7 @@ RUN HOST_ARCH=$TARGETARCH NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OP
 ####################################################################################################
 # Argo CD Build stage which performs the actual build of Argo CD binaries
 ####################################################################################################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20.10@sha256:ed6c4a5918b0a1ffb97970f6493d742dc5c7ebf3ccbd417c215d52830b57b994 AS argocd-build
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20.6@sha256:8e5a0067e6b387263a01d06b91ef1a983f90e9638564f6e25392fd2695f7ab6c AS argocd-build
 
 WORKDIR /go/src/github.com/argoproj/argo-cd
 
