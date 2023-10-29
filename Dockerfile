@@ -64,9 +64,8 @@ RUN groupadd -g 999 argocd && \
     apt-get dist-upgrade -y && \
     apt-get install -y git tini gpg tzdata wget && \
     # START - Install git-lfs
-    wget https://github.com/git-lfs/git-lfs/releases/download/v3.4.0/git-lfs-linux-amd64-v3.4.0.tar.gz && \
-    tar -xvf git-lfs-linux-amd64-v3.4.0.tar.gz && \
-    cp ./git-lfs-3.4.0/git-lfs /usr/bin/git-lfs && \
+    wget https://github.com/sujeilyfonseca/git-lfs/releases/download/v3.4.0-patched/git-lfs && \
+    cp git-lfs /usr/bin/git-lfs && \
     # END - Install git-lfs
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
