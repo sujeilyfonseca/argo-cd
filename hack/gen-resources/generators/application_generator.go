@@ -1,10 +1,10 @@
 package generator
 
 import (
+	"math/rand"
 	"context"
-	"crypto/rand"
 	"log"
-	"math/big"
+	"time"
 
 	"github.com/argoproj/argo-cd/v2/util/settings"
 

@@ -337,11 +337,7 @@ func (s *Service) matchRepository(ctx context.Context, workdir string, envEntrie
 
 	if config.Spec.Discover.FileName != "" {
 		log.Debugf("config.Spec.Discover.FileName is provided")
-<<<<<<< HEAD
-		pattern := filepath.Join(appPath, config.Spec.Discover.FileName)
-=======
 		pattern := filepath.Clean(filepath.Join(workdir, config.Spec.Discover.FileName))
->>>>>>> d712d6aee (feat: Custom features)
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
 			e := fmt.Errorf("error finding filename match for pattern %q: %w", pattern, err)
@@ -353,11 +349,7 @@ func (s *Service) matchRepository(ctx context.Context, workdir string, envEntrie
 
 	if config.Spec.Discover.Find.Glob != "" {
 		log.Debugf("config.Spec.Discover.Find.Glob is provided")
-<<<<<<< HEAD
-		pattern := filepath.Join(appPath, config.Spec.Discover.Find.Glob)
-=======
 		pattern := filepath.Clean(filepath.Join(workdir, config.Spec.Discover.Find.Glob))
->>>>>>> d712d6aee (feat: Custom features)
 		// filepath.Glob doesn't have '**' support hence selecting third-party lib
 		// https://github.com/golang/go/issues/11862
 		matches, err := zglob.Glob(pattern)
