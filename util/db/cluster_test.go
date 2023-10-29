@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -43,7 +45,7 @@ func Test_secretToCluster(t *testing.T) {
 			"config": []byte("{\"username\":\"foo\"}"),
 		},
 	}
-	cluster, err := secretToCluster(secret)
+	cluster, err := SecretToCluster(secret)
 	require.NoError(t, err)
 	assert.Equal(t, *cluster, v1alpha1.Cluster{
 		Name:   "test",
@@ -54,6 +56,24 @@ func Test_secretToCluster(t *testing.T) {
 		Labels:      labels,
 		Annotations: annotations,
 	})
+}
+
+func Test_secretToCluster_LastAppliedConfigurationDropped(t *testing.T) {
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "mycluster",
+			Namespace:   fakeNamespace,
+			Annotations: map[string]string{v1.LastAppliedConfigAnnotation: "val2"},
+		},
+		Data: map[string][]byte{
+			"name":   []byte("test"),
+			"server": []byte("http://mycluster"),
+			"config": []byte("{\"username\":\"foo\"}"),
+		},
+	}
+	cluster, err := SecretToCluster(secret)
+	require.NoError(t, err)
+	assert.Len(t, cluster.Annotations, 0)
 }
 
 func TestClusterToSecret(t *testing.T) {
@@ -78,6 +98,21 @@ func TestClusterToSecret(t *testing.T) {
 	assert.Equal(t, cluster.Labels, s.Labels)
 }
 
+func TestClusterToSecret_LastAppliedConfigurationRejected(t *testing.T) {
+	cluster := &appv1.Cluster{
+		Server:      "server",
+		Annotations: map[string]string{v1.LastAppliedConfigAnnotation: "val2"},
+		Name:        "test",
+		Config:      v1alpha1.ClusterConfig{},
+		Project:     "project",
+		Namespaces:  []string{"default"},
+	}
+	s := &v1.Secret{}
+	err := clusterToSecret(cluster, s)
+	require.Error(t, err)
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+}
+
 func Test_secretToCluster_NoConfig(t *testing.T) {
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -89,7 +124,7 @@ func Test_secretToCluster_NoConfig(t *testing.T) {
 			"server": []byte("http://mycluster"),
 		},
 	}
-	cluster, err := secretToCluster(secret)
+	cluster, err := SecretToCluster(secret)
 	assert.NoError(t, err)
 	assert.Equal(t, *cluster, v1alpha1.Cluster{
 		Name:        "test",
@@ -111,7 +146,7 @@ func Test_secretToCluster_InvalidConfig(t *testing.T) {
 			"config": []byte("{'tlsClientConfig':{'insecure':false}}"),
 		},
 	}
-	cluster, err := secretToCluster(secret)
+	cluster, err := SecretToCluster(secret)
 	require.Error(t, err)
 	assert.Nil(t, cluster)
 }
