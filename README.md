@@ -17,28 +17,32 @@
 
 # Argo CD - Declarative Continuous Delivery for Kubernetes
 
-## About Argo CD
-### What is Argo CD?
+## About
+### Description
+#### What is Argo CD?
 
-Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes.
+Argo CD is a declarative GitOps continuous delivery tool for Kubernetes.
 
 ![Argo CD UI](docs/assets/argocd-ui.gif)
 
 [![Argo CD Demo](https://img.youtube.com/vi/0WAm0y2vLIo/0.jpg)](https://youtu.be/0WAm0y2vLIo)
 
-### Why Argo CD?
+#### Why Argo CD?
 
-1. Application definitions, configurations, and environments should be declarative and version controlled.
+1. Application definitions, configurations, and environments should be declarative and version-controlled.
 1. Application deployment and lifecycle management should be automated, auditable, and easy to understand.
 
-### Who uses Argo CD?
+#### Who uses Argo CD?
 
 [Official Argo CD user list](USERS.md)
+
+#### Website
+Please find more information about the MCSP use case and processes in the [MCSP CI/CD Playbook](https://ibm.biz/CICD-Playbook).
 
 ## Documentation
 
 To learn more about Argo CD [go to the complete documentation](https://argo-cd.readthedocs.io/).
-Check live demo at https://cd.apps.argoproj.io/.
+Check the live demo at https://cd.apps.argoproj.io/.
 
 ## Community
 
