@@ -11,6 +11,11 @@ LABEL org.opencontainers.image.source="https://github.ibm.com/ibm-saas-platform/
       maintainer="MCSP CI/CD" \
       description="Docker image packaging the custom MCSP argo-cd."
 
+LABEL org.opencontainers.image.source="https://github.ibm.com/ibm-saas-platform/argo-cd" \
+      author="Argo CD" \
+      maintainer="MCSP CI/CD" \
+      description="Docker image packaging the custom MCSP argo-cd."
+
 RUN echo 'deb http://deb.debian.org/debian buster-backports main' >> /etc/apt/sources.list
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
