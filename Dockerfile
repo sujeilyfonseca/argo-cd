@@ -6,6 +6,11 @@ ARG BASE_IMAGE=docker.io/library/ubuntu:22.04
 ####################################################################################################
 FROM docker.io/library/golang:1.22.0 AS builder
 
+LABEL org.opencontainers.image.source="https://github.ibm.com/ibm-saas-platform/argo-cd" \
+      author="Argo CD" \
+      maintainer="MCSP CI/CD" \
+      description="Docker image packaging the custom MCSP argo-cd."
+
 RUN echo 'deb http://archive.debian.org/debian buster-backports main' >> /etc/apt/sources.list
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -35,8 +40,6 @@ RUN ./install.sh helm-linux && \
 # Argo CD Base - used as the base for both the release and dev argocd images
 ####################################################################################################
 FROM $BASE_IMAGE AS argocd-base
-
-LABEL org.opencontainers.image.source="https://github.com/argoproj/argo-cd"
 
 USER root
 
@@ -92,8 +95,8 @@ FROM --platform=$BUILDPLATFORM docker.io/library/node:20.11.1 AS argocd-ui
 WORKDIR /src
 COPY ["ui/package.json", "ui/yarn.lock", "./"]
 
-RUN yarn install --network-timeout 200000 && \
-    yarn cache clean
+RUN yarn cache clean && \
+    yarn install --network-timeout 200000 
 
 COPY ["ui/", "."]
 
