@@ -180,7 +180,7 @@ func AddCacheFlagsToCmd(cmd *cobra.Command, opts ...Options) func() (*Cache, err
 
 		var tlsConfig *tls.Config = nil
 		if redisUseTLS {
-			tlsConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+			tlsConfig = &tls.Config{}
 			if redisClientCertificate != "" {
 				clientCert, err := tls.LoadX509KeyPair(redisClientCertificate, redisClientKey)
 				if err != nil {
