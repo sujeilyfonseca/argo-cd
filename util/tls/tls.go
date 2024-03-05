@@ -432,5 +432,5 @@ func CreateServerTLSConfig(tlsCertPath, tlsKeyPath string, hosts []string) (*tls
 		cert = &c
 	}
 
-	return &tls.Config{Certificates: []tls.Certificate{*cert}, MinVersion: tls.VersionTLS12}, nil
+	return &tls.Config{Certificates: []tls.Certificate{*cert}}, nil
 }

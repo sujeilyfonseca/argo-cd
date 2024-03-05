@@ -70,7 +70,7 @@ func NewConnection(address string, timeoutSeconds int, tlsConfig *TLSConfigurati
 		grpc.WithStreamInterceptor(argogrpc.OTELStreamClientInterceptor()),
 	}
 
-	tlsC := &tls.Config{MinVersion: tls.VersionTLS12}
+	tlsC := &tls.Config{}
 	if !tlsConfig.DisableTLS {
 		if !tlsConfig.StrictValidation {
 			tlsC.InsecureSkipVerify = true
