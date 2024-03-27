@@ -2,11 +2,8 @@ blank_issues_enabled: false
 
 contact_links:
   - name: Have you read the docs?
-    url: https://argo-cd.readthedocs.io/
+    url: com/ibm-saas-platform/CICD-Playbook
     about: Much help can be found in the docs
-  - name: Ask a question
-    url: https://github.com/argoproj/argo-cd/discussions/new
-    about: Ask a question or start a discussion about Argo CD
   - name: Chat on Slack
-    url: https://argoproj.github.io/community/join-slack
-    about: Maybe chatting with the community can help
+    url: https://ibm.enterprise.slack.com/archives/C02LN72F1R6
+    about: "#ibm-mcsp-gitops"
