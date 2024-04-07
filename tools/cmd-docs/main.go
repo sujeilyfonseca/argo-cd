@@ -32,7 +32,7 @@ func main() {
 		return fmt.Sprintf("# `%s` Command Reference\n\n", strings.ReplaceAll(filename, "_", " "))
 	}
 
-	err := doc.GenMarkdownTreeCustom(argocdcli.NewCommand(), "./docs/user-guide/commands", headerPrepender, identity)
+	err = doc.GenMarkdownTreeCustom(argocdcli.NewCommand(), "./docs/user-guide/commands", headerPrepender, identity)
 	if err != nil {
 		log.Fatal(err)
 	}
