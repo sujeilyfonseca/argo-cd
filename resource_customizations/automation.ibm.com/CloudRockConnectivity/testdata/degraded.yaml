@@ -1,0 +1,35 @@
+---
+apiVersion: automation.ibm.com/v1alpha1
+kind: CloudRockConnectivity
+metadata:
+  name: ns-conn-01
+  namespace: ns
+spec:
+  infrastructure: aws
+  vpcName: ns-conn-vpc-01
+  actions:
+    refreshConnections: false
+  ingresses:
+    - id: ingress-00
+      target: cluster/ns-clust-01/customdomain/ns-clust-01-cd
+      type: private
+      preapprovals:
+        - arn:aws:iam::0123456789:root
+    - id: ingress-01
+      target: nlb/arn:aws:elasticloadbalancing:us-east-1:012345678901:loadbalancer/net/mycluster-9vd8g-int/4d2218bb5c445628
+      type: private
+      preapprovals:
+        - arn:aws:iam::0123456789:root
+  egresses:
+    - id: egress-00
+      type: private
+      serviceName: com.amazonaws.vpce.us-east-1.vpce-svc-abcdefgh012345678
+      hostedZoneName: private.platform.dev.saas.ibm.com
+      cnames:
+        - example.private.platform.dev.saas.ibm.com
+status:
+  conditions:
+    - lastTransitionTime: '2024-12-31T00:00:00Z'
+      status: 'False'
+      type: Ready
+  message: Failure message
