@@ -6,6 +6,11 @@ ARG BASE_IMAGE=docker.io/library/ubuntu:22.04@sha256:0bced47fffa3361afa981854fca
 ####################################################################################################
 FROM docker.io/library/golang:1.21.9@sha256:7d0dcbe5807b1ad7272a598fbf9d7af15b5e2bed4fd6c4c2b5b3684df0b317dd AS builder
 
+LABEL org.opencontainers.image.source="https://github.ibm.com/ibm-saas-platform/argo-cd" \
+      author="Argo CD; Sujeily Fonseca <sujeily.fonseca@ibm.com>" \
+      maintainer="MCSP CI/CD" \
+      description="Docker image packaging the custom MCSP argo-cd."
+
 RUN echo 'deb http://archive.debian.org/debian buster-backports main' >> /etc/apt/sources.list
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -36,8 +41,6 @@ RUN ./install.sh helm && \
 ####################################################################################################
 FROM $BASE_IMAGE AS argocd-base
 
-LABEL org.opencontainers.image.source="https://github.com/argoproj/argo-cd"
-
 USER root
 
 ENV ARGOCD_USER_ID=999
@@ -51,7 +54,11 @@ RUN groupadd -g $ARGOCD_USER_ID argocd && \
     apt-get update && \
     apt-get dist-upgrade -y && \
     apt-get install -y \
-    git git-lfs tini gpg tzdata connect-proxy && \
+    git tini gpg tzdata wget connect-proxy && \
+    # START - Install git-lfs
+    wget https://github.com/sujeilyfonseca/git-lfs/releases/download/v3.5.1-patched/git-lfs && \
+    cp git-lfs /usr/bin/git-lfs && \
+    # END - Install git-lfs
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -88,8 +95,8 @@ FROM --platform=$BUILDPLATFORM docker.io/library/node:21.6.2@sha256:65998e325b06
 WORKDIR /src
 COPY ["ui/package.json", "ui/yarn.lock", "./"]
 
-RUN yarn install --network-timeout 200000 && \
-    yarn cache clean
+RUN yarn cache clean && \
+    yarn install --network-timeout 200000 
 
 COPY ["ui/", "."]
 
