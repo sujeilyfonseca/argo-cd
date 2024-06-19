@@ -2,7 +2,6 @@ package session
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"math"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	cryptoRand "crypto/rand"
+	mathRand "math/rand"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v4"
@@ -315,7 +316,7 @@ func expireOldFailedAttempts(maxAge time.Duration, failures map[string]LoginAtte
 
 // Protect admin user from login attempt reset caused by attempts to overflow cache in a brute force attack. Instead remove random non-admin to make room in cache.
 func pickRandomNonAdminLoginFailure(failures map[string]LoginAttempts, username string) *string {
-	idx := rand.Intn(len(failures) - 1)
+	idx := mathRand.Intn(len(failures) - 1)
 	i := 0
 	for key := range failures {
 		if i == idx {
@@ -429,7 +430,7 @@ func (mgr *SessionManager) VerifyUsernamePassword(username string, password stri
 	start := time.Now()
 	if mgr.verificationDelayNoiseEnabled {
 		defer func() {
-			nBig, err := rand.Int(rand.Reader, big.NewInt(27))
+			nBig, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(27))
 			if err != nil {
 				panic(err)
 			}
